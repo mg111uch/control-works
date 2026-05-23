@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Three.js CartPole with Draggable Cart</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+    <script>
+        // Set up Three.js scene, camera, renderer
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Camera controls (orbit, pan, zoom)
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.minDistance = 2;
+        controls.maxDistance = 20;
+
+        // Set up Cannon.js physics world
+        const world = new CANNON.World();
+        world.gravity.set(0, -9.81, 0);
+
+        // Add ground plane (gray)
+        const groundGeometry = new THREE.PlaneGeometry(20, 20);
+        const groundMaterial = new THREE.MeshBasicMaterial({ color: 0x808080, side: THREE.DoubleSide });
+        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        ground.rotation.x = Math.PI / 2;
+        ground.position.y = 0; // Ground at y=0
+        scene.add(ground);
+
+        // Add track (green, elevated)
+        const trackGeometry = new THREE.BoxGeometry(10, 0.2, 0.5);
+        const trackMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        const track = new THREE.Mesh(trackGeometry, trackMaterial);
+        track.position.set(0, 1.9, 0); // Elevated above ground
+        scene.add(track);
+
+        // Add cart (red, movable)
+        const cartGeometry = new THREE.BoxGeometry(1, 0.5, 0.5);
+        const cartMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+        const cart = new THREE.Mesh(cartGeometry, cartMaterial);
+        cart.position.set(0, 2.25, 0); // On track
+        scene.add(cart);
+
+        // Cannon.js cart body (movable along x-axis)
+        const cartShape = new CANNON.Box(new CANNON.Vec3(0.5, 0.25, 0.25));
+        const cartBody = new CANNON.Body({ mass: 1, type: CANNON.Body.KINEMATIC });
+        cartBody.addShape(cartShape);
+        cartBody.position.set(0, 2.25, 0);
+        world.addBody(cartBody);
+
+        // Add pole (blue, physical)
+        const poleGeometry = new THREE.CylinderGeometry(0.05, 0.05, 2, 32);
+        const poleMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff });
+        const poleMesh = new THREE.Mesh(poleGeometry, poleMaterial);
+        scene.add(poleMesh);
+
+        // Cannon.js pole body
+        const poleShape = new CANNON.Cylinder(0.05, 0.05, 2, 16);
+        const poleBody = new CANNON.Body({ mass: 1 });
+        poleBody.addShape(poleShape);
+        poleBody.position.set(0, 1.25, 0); // Center at pivot
+        world.addBody(poleBody);
+
+        // Hinge constraint (pole pivots at cart top)
+        const pivotPoint = new CANNON.Vec3(0, 2.25, 0);
+        const pivotConstraint = new CANNON.HingeConstraint(poleBody, cartBody, {
+            pivotA: new CANNON.Vec3(0, 1, 0),
+            axisA: new CANNON.Vec3(0, 0, 1),
+            pivotB: new CANNON.Vec3(0, 0, 0),
+            axisB: new CANNON.Vec3(0, 0, 1)
+        });
+        world.addConstraint(pivotConstraint);
+
+        // Set initial pole angle (45° clockwise from downward)
+        const angle = -Math.PI / 4;
+        poleBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), angle);
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        directionalLight.position.set(5, 5, 5);
+        scene.add(directionalLight);
+
+        // Camera position
+        camera.position.set(5, 3, 5);
+
+        // Mouse dragging for cart
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        let isDragging = false;
+        let selectedObject = null;
+
+        document.addEventListener('mousedown', (event) => {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects([cart]);
+            if (intersects.length > 0) {
+                isDragging = true;
+                selectedObject = intersects[0].object;
+                controls.enabled = false;
+            }
+        });
+
+        document.addEventListener('mousemove', (event) => {
+            if (isDragging) {
+                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+                raycaster.setFromCamera(mouse, camera);
+                const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -cart.position.z);
+                const intersect = new THREE.Vector3();
+                raycaster.ray.intersectPlane(plane, intersect);
+                const x = Math.max(-4.5, Math.min(4.5, intersect.x)); // Constrain to track
+                cart.position.x = x;
+                cartBody.position.x = x;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            selectedObject = null;
+            controls.enabled = true;
+        });
+
+        // Animation loop
+        const clock = new THREE.Clock();
+        function animate() {
+            requestAnimationFrame(animate);
+            const delta = clock.getDelta();
+            world.step(1 / 60, delta);
+
+            // Sync meshes with physics
+            poleMesh.position.copy(poleBody.position);
+            poleMesh.quaternion.copy(poleBody.quaternion);
+            cart.position.copy(cartBody.position);
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

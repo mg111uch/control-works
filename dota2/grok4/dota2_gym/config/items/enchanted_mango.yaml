@@ -1,0 +1,11 @@
+# config/items/enchanted_mango.yaml
+name: "Enchanted Mango"
+internal_name: "enchanted_mango"
+cost: 70
+components: []
+stats:
+  hp_regen: 0.7
+active:
+  name: "Consume"
+  instant_mana: 100
+tooltip: "+0.7 HP Regen. Consume: Instantly restore 100 mana."

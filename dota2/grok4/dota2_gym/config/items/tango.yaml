@@ -1,0 +1,12 @@
+# config/items/tango.yaml
+name: "Tango"
+internal_name: "tango"
+cost: 90
+components: []
+active:
+  name: "Eat Tree"
+  type: "target_tree"
+  hp_per_sec: 115
+  duration: 16.0
+  charges: 3
+tooltip: "3 charges. Eat a tree to regain 115 HP over 16 seconds."

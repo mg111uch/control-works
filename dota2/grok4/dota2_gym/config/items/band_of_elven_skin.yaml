@@ -1,0 +1,8 @@
+# config/items/band_of_elven_skin.yaml
+name: "Band of Elven Skin"
+internal_name: "band_of_elven_skin"
+cost: 450
+components: []
+stats:
+  agility: 6
+tooltip: "+6 Agility"

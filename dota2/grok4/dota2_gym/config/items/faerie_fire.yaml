@@ -1,0 +1,11 @@
+# config/items/faerie_fire.yaml
+name: "Faerie Fire"
+internal_name: "faerie_fire"
+cost: 70
+components: []
+stats:
+  damage: 2
+active:
+  name: "Consume"
+  instant_hp: 75
+tooltip: "+2 Damage. Consume: Instantly restore 75 HP."

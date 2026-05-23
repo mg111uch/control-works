@@ -1,0 +1,17 @@
+# config/items/magic_wand.yaml
+name: "Magic Wand"
+internal_name: "magic_wand"
+cost: 450
+components: ["magic_stick", "enchanted_mango", "iron_branch"]
+stats:
+  strength: 4
+  agility: 4
+  intelligence: 4
+  hp_regen: 0.5
+active:
+  name: "Energy Charge"
+  restore_hp: 15
+  restore_mana: 15
+  per_charge: true
+  max_charges: 20
+tooltip: "+4 All Stats, +0.5 HP Regen. Active: Restore 15 HP/Mana per charge (max 20)"

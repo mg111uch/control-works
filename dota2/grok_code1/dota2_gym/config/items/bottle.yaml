@@ -1,0 +1,14 @@
+# config/items/bottle.yaml
+name: "Bottle"
+internal_name: "bottle"
+cost: 650
+components: []
+active:
+  name: "Regenerate"
+  hp_per_sec: 70
+  mana_per_sec: 110
+  duration: 2.5
+  charges: 3
+  refill_at_fountain: true
+  stores_runes: true
+tooltip: "3 charges. Restores 70 HP & 110 Mana over 2.5s. Refills at fountain. Can store runes."

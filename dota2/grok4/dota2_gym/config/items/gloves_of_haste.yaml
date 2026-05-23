@@ -1,0 +1,8 @@
+# config/items/gloves_of_haste.yaml
+name: "Gloves of Haste"
+internal_name: "gloves_of_haste"
+cost: 450
+components: []
+stats:
+  attack_speed: 20
+tooltip: "+20 Attack Speed"

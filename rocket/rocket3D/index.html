@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Starship 3D Control Center</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000; font-family: monospace; color: white; }
+        #ui { position: absolute; top: 10px; left: 10px; z-index: 10; pointer-events: none; }
+        #controls { position: absolute; bottom: 10px; left: 10px; z-index: 10; pointer-events: none; }
+    </style>
+    <!-- Import Three.js via CDN -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="ui">
+        <h1>SPACEX STARSHIP TELEMETRY</h1>
+        <div id="telemetry">Waiting for link...</div>
+    </div>
+    <div id="controls">
+        CONTROLS:<br>
+        W/S: Throttle | ARROWS: Gimbal | SPACE: Stage Sep | R: Reset
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // --- SCENE SETUP ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x050510);
+        
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 10000000);
+        camera.position.set(0, 6371000 + 500, 500); // Start near launchpad
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Lights
+        const ambLight = new THREE.AmbientLight(0x404040, 2);
+        scene.add(ambLight);
+        const sunLight = new THREE.DirectionalLight(0xffffff, 3);
+        sunLight.position.set(10000, 10000, 10000);
+        scene.add(sunLight);
+
+        // --- OBJECTS ---
+        const R_EARTH = 6.371e6;
+
+        // Earth
+        const earthGeo = new THREE.SphereGeometry(R_EARTH, 128, 128);
+        const earthMat = new THREE.MeshPhongMaterial({ 
+            color: 0x2233ee, 
+            emissive: 0x112244,
+            wireframe: false
+        });
+        const earth = new THREE.Mesh(earthGeo, earthMat);
+        scene.add(earth);
+
+        // Grid helper on surface
+        const gridHelper = new THREE.PolarGridHelper(2000, 16, 8, 64);
+        gridHelper.position.set(0, R_EARTH, 0);
+        scene.add(gridHelper);
+
+        // Rocket Materials
+        const boosterMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.8, roughness: 0.2 });
+        const shipMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, metalness: 0.8, roughness: 0.2 });
+        const flameMat = new THREE.MeshBasicMaterial({ color: 0xffaa00 });
+
+        // Booster Group
+        const boosterGroup = new THREE.Group();
+        const bBody = new THREE.Mesh(new THREE.CylinderGeometry(4.5, 4.5, 70, 16), boosterMat);
+        // ThreeJS cylinder defaults to vertical Y. Rocket physics assumes Y is up. Matches.
+        bBody.position.y = 0;
+        
+        // Grid Fins (Visual)
+        const finGeo = new THREE.BoxGeometry(2, 0.2, 1);
+        const fin1 = new THREE.Mesh(finGeo, new THREE.MeshBasicMaterial({color:0x333333})); fin1.position.set(4.5, 30, 0);
+        const fin2 = new THREE.Mesh(finGeo, new THREE.MeshBasicMaterial({color:0x333333})); fin2.position.set(-4.5, 30, 0);
+        bBody.add(fin1); bBody.add(fin2);
+        
+        // Flame
+        const bFlame = new THREE.Mesh(new THREE.ConeGeometry(3, 20, 16), flameMat);
+        bFlame.position.y = -45;
+        bFlame.rotation.x = Math.PI;
+        bFlame.visible = false;
+        bBody.add(bFlame);
+        
+        boosterGroup.add(bBody);
+        scene.add(boosterGroup);
+
+        // Ship Group
+        const shipGroup = new THREE.Group();
+        const sBody = new THREE.Mesh(new THREE.CylinderGeometry(4.5, 4.5, 50, 16), shipMat);
+        
+        // Nosecone
+        const nose = new THREE.Mesh(new THREE.ConeGeometry(4.5, 10, 16), shipMat);
+        nose.position.y = 30;
+        sBody.add(nose);
+        
+        // Flaps
+        const flapGeo = new THREE.BoxGeometry(3, 6, 0.5);
+        const flap1 = new THREE.Mesh(flapGeo, new THREE.MeshBasicMaterial({color:0x111111})); flap1.position.set(4, -15, 0);
+        const flap2 = new THREE.Mesh(flapGeo, new THREE.MeshBasicMaterial({color:0x111111})); flap2.position.set(-4, -15, 0);
+        sBody.add(flap1); sBody.add(flap2);
+
+        const sFlame = new THREE.Mesh(new THREE.ConeGeometry(2, 15, 16), flameMat);
+        sFlame.position.y = -35;
+        sFlame.rotation.x = Math.PI;
+        sFlame.visible = false;
+        sBody.add(sFlame);
+
+        shipGroup.add(sBody);
+        scene.add(shipGroup);
+
+        // Trail Lines
+        const trailMax = 500;
+        const bTrailGeo = new THREE.BufferGeometry();
+        const bTrailMat = new THREE.LineBasicMaterial({ color: 0xff0000 });
+        const bTrail = new THREE.Line(bTrailGeo, bTrailMat);
+        scene.add(bTrail);
+        
+        const bTrailPos = new Float32Array(trailMax * 3);
+        bTrailGeo.setAttribute('position', new THREE.BufferAttribute(bTrailPos, 3));
+        let trailIdx = 0;
+
+
+        // --- INPUT HANDLING ---
+        const keys = { w: false, s: false, up: false, down: false, left: false, right: false, space: false, r: false };
+
+        window.addEventListener('keydown', (e) => {
+            if(e.key === 'w') keys.w = true;
+            if(e.key === 's') keys.s = true;
+            if(e.key === 'ArrowUp') keys.up = true;
+            if(e.key === 'ArrowDown') keys.down = true;
+            if(e.key === 'ArrowLeft') keys.left = true;
+            if(e.key === 'ArrowRight') keys.right = true;
+            if(e.key === ' ') keys.space = true;
+            if(e.key === 'r') keys.r = true;
+        });
+        window.addEventListener('keyup', (e) => {
+            if(e.key === 'w') keys.w = false;
+            if(e.key === 's') keys.s = false;
+            if(e.key === 'ArrowUp') keys.up = false;
+            if(e.key === 'ArrowDown') keys.down = false;
+            if(e.key === 'ArrowLeft') keys.left = false;
+            if(e.key === 'ArrowRight') keys.right = false;
+            if(e.key === ' ') keys.space = false;
+            if(e.key === 'r') keys.r = false;
+        });
+
+        // --- WEBSOCKET ---
+        const ws = new WebSocket("ws://" + window.location.host + "/ws");
+        
+        let throttleVal = 0.0;
+        let pitchVal = 0.0;
+        let yawVal = 0.0;
+
+        ws.onopen = () => {
+            document.getElementById("telemetry").innerText = "LINK ESTABLISHED";
+            sendControls();
+        };
+
+        ws.onmessage = (event) => {
+            const state = JSON.parse(event.data);
+            updatePhysicsState(state);
+            sendControls(); // Send response immediately to keep loop tight
+        };
+
+        function sendControls() {
+            if(keys.w) throttleVal += 0.02;
+            if(keys.s) throttleVal -= 0.02;
+            if(throttleVal > 1) throttleVal = 1;
+            if(throttleVal < 0) throttleVal = 0;
+
+            if(keys.up) pitchVal += 0.5;
+            if(keys.down) pitchVal -= 0.5;
+            if(keys.left) yawVal += 0.5;
+            if(keys.right) yawVal -= 0.5;
+            
+            // Dampen return to center if no keys
+            if(!keys.up && !keys.down) pitchVal *= 0.9;
+            if(!keys.left && !keys.right) yawVal *= 0.9;
+
+            const payload = {
+                throttle: throttleVal,
+                pitch: pitchVal,
+                yaw: yawVal,
+                sep: keys.space,
+                reset: keys.r
+            };
+            
+            if(ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify(payload));
+            }
+            if(keys.r) { throttleVal=0; keys.space=false; keys.r=false; }
+        }
+
+        function updatePhysicsState(state) {
+            // Update Booster
+            const bPos = state.booster.pos;
+            const bQ = state.booster.q; // w, x, y, z
+            
+            boosterGroup.position.set(bPos[0], bPos[1], bPos[2]);
+            // ThreeJS Quat is x,y,z,w. Python was w,x,y,z
+            boosterGroup.quaternion.set(bQ[1], bQ[2], bQ[3], bQ[0]);
+            
+            bFlame.visible = state.booster.thr > 0.01;
+            bFlame.scale.set(1, 1 + state.booster.thr, 1);
+
+            // Update Ship
+            const sPos = state.ship.pos;
+            const sQ = state.ship.q;
+            shipGroup.position.set(sPos[0], sPos[1], sPos[2]);
+            shipGroup.quaternion.set(sQ[1], sQ[2], sQ[3], sQ[0]);
+
+            sFlame.visible = state.ship.thr > 0.01;
+
+            // Camera Tracking (Follow Booster)
+            const camOffset = new THREE.Vector3(0, 50, 200);
+            camOffset.applyQuaternion(boosterGroup.quaternion);
+            camera.position.lerp(new THREE.Vector3(
+                bPos[0] + camOffset.x, 
+                bPos[1] + camOffset.y, 
+                bPos[2] + camOffset.z
+            ), 0.1);
+            camera.lookAt(bPos[0], bPos[1], bPos[2]);
+
+            // Update UI
+            const alt = (Math.sqrt(bPos[0]**2 + bPos[1]**2 + bPos[2]**2) - R_EARTH) / 1000;
+            document.getElementById("telemetry").innerText = 
+                `ALT: ${alt.toFixed(2)} km | THR: ${(throttleVal*100).toFixed(0)}% | FUEL: ${(state.booster.fuel/1000).toFixed(0)}t`;
+
+            // Trail
+            if (trailIdx < trailMax * 3) {
+                bTrailPos[trailIdx++] = bPos[0];
+                bTrailPos[trailIdx++] = bPos[1];
+                bTrailPos[trailIdx++] = bPos[2];
+                bTrailGeo.attributes.position.needsUpdate = true;
+            }
+        }
+
+        // --- RENDER LOOP ---
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Handle Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+    </script>
+</body>
+</html>

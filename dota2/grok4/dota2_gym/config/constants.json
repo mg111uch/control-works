@@ -1,0 +1,118 @@
+{
+  "game": {
+    "tps": 15,
+    "tick_rate_seconds": 0.06666666666666667,
+    "map_width": 16000,
+    "map_height": 14400,
+    "vision_radius": 1800,
+    "rune_spawn_interval": 120.0,
+    "starting_gold": 600,
+    "reliable_gold_per_sec": 1.0,
+    "max_hero_level": 10,
+    "win_condition_first_tower": true
+  },
+
+  "fountain": {
+    "position": [[13000, 13000], [3000, 3000]],
+    "heal_per_sec": 40,
+    "mana_per_sec": 30,
+    "regen_radius": 900
+  },
+
+  "runes": {
+    "double_damage_duration": 45.0,
+    "haste_duration": 25.0,
+    "haste_movespeed": 550,
+    "river_bounds": {
+      "min_x": 5000,
+      "max_x": 11000,
+      "min_y": 4000,
+      "max_y": 10000
+    }
+  },
+
+  "creeps": {
+    "spawn_interval": 30.0,
+    "initial_spawn_time": 0.0,
+    "melee_count": 3,
+    "ranged_count": 1,
+    "siege_every_n_waves": 10,
+    "melee_stats": {
+      "hp": 550,
+      "damage": 22,
+      "bounty": 40,
+      "movespeed": 325
+    },
+    "ranged_stats": {
+      "hp": 300,
+      "damage": 45,
+      "bounty": 48,
+      "movespeed": 300
+    },
+    "siege_stats": {
+      "hp": 875,
+      "damage": 40,
+      "bounty": 88,
+      "movespeed": 280
+    }
+  },
+
+  "towers": {
+    "tier1_hp": 1800,
+    "tier2_hp": 2000,
+    "tier3_hp": 2200,
+    "ancient_hp": 4500,
+    "damage": 120,
+    "attack_range": 700,
+    "attack_cooldown": 1.0
+  },
+
+  "hero": {
+    "base_movespeed": 300,
+    "base_attack_range": 500,
+    "base_attack_time": 1.7,
+    "projectile_speed": 900,
+    "base_damage_min": 35,
+    "base_damage_max": 41,
+    "base_armor": 3,
+    "str_per_level": 2.3,
+    "agi_per_level": 2.9,
+    "int_per_level": 3.3,
+    "soul_damage_per_soul": 2,
+    "soul_attack_range_bonus": 8
+  },
+
+  "raze": {
+    "short_range": 200,
+    "medium_range": 450,
+    "long_range": 700,
+    "damage": [80, 140, 200, 260, 320, 380, 440, 500, 560, 620],
+    "mana_cost": 90,
+    "cooldown": 10.0
+  },
+
+  "requiem": {
+    "damage_per_line": 80,
+    "lines": 12,
+    "slow_duration": 5.0,
+    "cast_time": 1.67,
+    "mana_cost": 150,
+    "cooldown": [120, 110, 100],
+    "travel_speed": 600
+  },
+
+  "buyback": {
+    "base_cost": 100,
+    "level_multiplier": 1.5,
+    "networth_divisor": 13
+  },
+
+  "ui": {
+    "screen_width": 1280,
+    "screen_height": 720,
+    "minimap_size": 200,
+    "minimap_pos": [1070, 520],
+    "top_bar_height": 50,
+    "bottom_bar_height": 180
+  }
+}

@@ -1,0 +1,8 @@
+# config/items/boots_of_speed.yaml
+name: "Boots of Speed"
+internal_name: "boots_of_speed"
+cost: 500
+components: []
+stats:
+  move_speed: 45
+tooltip: "+45 Movement Speed"

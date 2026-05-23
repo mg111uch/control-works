@@ -1,0 +1,34 @@
+# Dota2 Gym Game Configuration
+
+game:
+  tick_rate: 15  # 15 ticks per second (66.6ms fixed timestep)
+  map_width: 7200
+  map_height: 7200
+
+rendering:
+  screen_width: 1280
+  screen_height: 720
+
+fog_of_war:
+  enabled: true
+  vision_radius: 1800
+
+movement:
+  movement_speed_base: 300  # units per second
+
+combat:
+  projectile_speed: 1000  # units per second
+  attack_cooldown: 1.7  # seconds
+
+assets:
+  minimap: "assets/minimap.png"
+  hero_potrait: "assets/heroes/shadow_fiend_3.png"
+  shadow_fiend: "assets/heroes/shadow_fiend_4.png"
+  radiant_tower: "assets/entity/radiant_tower.png"
+  dire_tower: "assets/entity/dire_tower.png"
+  radiant_base: "assets/entity/radiant_base.png"
+  dire_base: "assets/entity/dire_base.png"
+  radiant_meele: "assets/entity/radiant_meele.png"
+  dire_meele: "assets/entity/dire_meele.png"
+  radiant_ranged: "assets/entity/radiant_ranged.png"
+  dire_ranged: "assets/entity/dire_ranged.png"

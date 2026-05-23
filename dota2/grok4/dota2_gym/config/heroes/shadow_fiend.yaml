@@ -1,0 +1,89 @@
+# config/heroes/shadow_fiend.yaml
+name: "Shadow Fiend"
+internal_name: "shadow_fiend"
+team: 
+  - "radiant"
+  - "dire"
+
+base_stats:
+  strength: 19
+  agility: 20
+  intelligence: 18
+  strength_gain: 2.3
+  agility_gain: 2.9
+  intelligence_gain: 3.3
+
+  move_speed: 300
+  turn_rate: 999           # instant turn (no turn rate)
+  attack_range: 500
+  projectile_speed: 900
+  base_attack_time: 1.7
+  damage_min: 35
+  damage_max: 41
+  armor: 3.0
+  magic_resistance: 25
+
+  sight_range_day: 1800
+  sight_range_night: 1800
+
+abilities:
+  - name: "Shadow Raze (Short)"
+    hotkey: "Q"
+    type: "point_target"
+    range: 200
+    damage_type: "magical"
+    damage: [80, 140, 200, 260, 320, 380, 440, 500, 560, 620]
+    mana_cost: 90
+    cooldown: 10.0
+    cast_point: 0.5
+    projectile_speed: 900
+    radius: 250
+
+  - name: "Shadow Raze (Medium)"
+    hotkey: "W"
+    type: "point_target"
+    range: 450
+    damage_type: "magical"
+    damage: [80, 140, 200, 260, 320, 380, 440, 500, 560, 620]
+    mana_cost: 90
+    cooldown: 10.0
+    cast_point: 0.5
+    projectile_speed: 900
+    radius: 250
+
+  - name: "Shadow Raze (Long)"
+    hotkey: "E"
+    type: "point_target"
+    range: 700
+    damage_type: "magical"
+    damage: [80, 140, 200, 260, 320, 380, 440, 500, 560, 620]
+    mana_cost: 90
+    cooldown: 10.0
+    cast_point: 0.5
+    projectile_speed: 900
+    radius: 250
+
+  - name: "Requiem of Souls"
+    hotkey: "R"
+    type: "no_target"
+    damage_type: "magical"
+    base_damage_per_line: 80
+    souls_damage_multiplier: 0.4
+    number_of_lines: 12
+    line_width: 125
+    line_speed: 600
+    slow_percentage: 50
+    slow_duration: 5.0
+    cast_time: 1.67
+    mana_cost: [150, 175, 200]
+    cooldown: [120, 110, 100]
+    fear_duration: 2.0
+    reduction_per_soul: 0.5
+
+passives:
+  - name: "Necromastery"
+    max_souls: 40
+    damage_per_soul: 2
+    attack_range_per_soul: 8
+    soul_release_on_death: true
+    soul_release_radius: 900

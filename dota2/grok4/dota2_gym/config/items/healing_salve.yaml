@@ -1,0 +1,11 @@
+# config/items/healing_salve.yaml
+name: "Healing Salve"
+internal_name: "healing_salve"
+cost: 110
+components: []
+active:
+  name: "Regenerate"
+  hp_per_sec: 400
+  duration: 8.0
+  charges: 1
+tooltip: "Restores 400 HP over 8 seconds. Cancels if damaged by player-controlled unit."

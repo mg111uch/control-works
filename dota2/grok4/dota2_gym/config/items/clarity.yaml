@@ -1,0 +1,11 @@
+# config/items/clarity.yaml
+name: "Clarity"
+internal_name: "clarity"
+cost: 50
+components: []
+active:
+  name: "Regenerate"
+  mana_per_sec: 100
+  duration: 50.0
+  charges: 1
+tooltip: "Regenerates 100 mana per second for 50 seconds (cancels on attack/damage)."

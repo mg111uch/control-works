@@ -1,0 +1,10 @@
+name: "Town Portal Scroll"
+internal_name: "town_portal_scroll"
+cost: 50
+components: []
+active:
+  name: "Teleport"
+  channel_time: 0.0          # Instant as per final spec
+  cooldown: 80.0
+  target_type: "structure"
+tooltip: "Instantly teleports to a friendly structure. 80s cooldown."

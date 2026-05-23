@@ -1,0 +1,10 @@
+# config/items/black_king_bar.yaml
+name: "Black King Bar"
+internal_name: "black_king_bar"
+cost: 4050
+components: ["mithril_hammer", "ogre_axe", "recipe"]
+active:
+  name: "Avatar"
+  spell_immunity_duration: [10, 9, 8, 7, 6, 5]   # per charge, 6 charges total
+  charges: 6
+tooltip: "Active: Spell Immunity (duration decreases per use)"

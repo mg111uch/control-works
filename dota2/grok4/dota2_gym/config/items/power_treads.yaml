@@ -1,0 +1,13 @@
+# config/items/power_treads.yaml
+name: "Power Treads"
+internal_name: "power_treads"
+cost: 1400
+components: ["boots_of_speed", "gloves_of_haste", "band_of_elven_skin"]
+stats:
+  move_speed: 45
+  attack_speed: 25
+  selected_attribute_bonus: 12
+active:
+  name: "Switch Attribute"
+  options: ["strength", "agility", "intelligence"]
+tooltip: "+45 MS, +25 AS, +12 Selected Attribute (switchable)"

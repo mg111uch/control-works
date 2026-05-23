@@ -1,0 +1,53 @@
+{
+  "name": "Simple Oval",
+  "version": "1.0",
+  "difficulty": "easy",
+  "screen_size": {"width": 600, "height": 400},
+  
+  "start_position": {
+    "x": 150,
+    "y": 200,
+    "angle": 0
+  },
+  
+  "track_elements": [
+    {
+      "type": "ellipse",
+      "center_x": 300,
+      "center_y": 200,
+      "radius_x": 200,
+      "radius_y": 150,
+      "is_hole": false
+    },
+    {
+      "type": "ellipse",
+      "center_x": 300,
+      "center_y": 200,
+      "radius_x": 100,
+      "radius_y": 70,
+      "is_hole": true
+    }
+  ],
+  
+  "checkpoints": [
+    {"id": 0, "type": "position", "x_min": 400, "x_max": 500, "y_min": 50, "y_max": 150},
+    {"id": 1, "type": "position", "x_min": 450, "x_max": 550, "y_min": 150, "y_max": 250},
+    {"id": 2, "type": "position", "x_min": 400, "x_max": 500, "y_min": 250, "y_max": 350},
+    {"id": 3, "type": "position", "x_min": 100, "x_max": 200, "y_min": 250, "y_max": 350},
+    {"id": 4, "type": "position", "x_min": 50, "x_max": 150, "y_min": 150, "y_max": 250},
+    {"id": 5, "type": "position", "x_min": 100, "x_max": 200, "y_min": 50, "y_max": 150}
+  ],
+  
+  "lap_completion": {
+    "required_checkpoints": [0, 1, 2, 3, 4, 5],
+    "sequence_required": false
+  },
+  
+  "visual": {
+    "track_color": [80, 80, 80],
+    "border_color": [255, 255, 255],
+    "grass_color": [0, 128, 0],
+    "background_color": [128, 128, 128],
+    "border_width": 2
+  }
+}

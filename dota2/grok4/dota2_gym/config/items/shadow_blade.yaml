@@ -1,0 +1,15 @@
+# config/items/shadow_blade.yaml
+name: "Shadow Blade"
+internal_name: "shadow_blade"
+cost: 3000
+components: []
+stats:
+  damage: 22
+  attack_speed: 30
+active:
+  name: "Shadow Walk"
+  duration: 14.0
+  fade_time: 0.3
+  bonus_movespeed: 20
+  bonus_damage_first_hit: 175
+tooltip: "+22 Damage, +30 Attack Speed. Active: Invisibility +20% MS, first attack deals +175 dmg"

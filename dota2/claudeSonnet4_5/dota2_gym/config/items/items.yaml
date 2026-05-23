@@ -1,0 +1,170 @@
+# Items Configuration
+# All 16 core items moved from hardcoded item_system.py
+
+items:
+  # 1. Wraith Band
+  - id: wraith_band
+    name: "Wraith Band"
+    cost: 505
+    stats:
+      agility: 6
+      strength: 3
+      intelligence: 3
+
+  # 2. Null Talisman
+  - id: null_talisman
+    name: "Null Talisman"
+    cost: 505
+    stats:
+      intelligence: 6
+      strength: 3
+      agility: 3
+
+  # 3. Bracer
+  - id: bracer
+    name: "Bracer"
+    cost: 505
+    stats:
+      strength: 6
+      agility: 3
+      intelligence: 3
+
+  # 4. Magic Wand
+  - id: magic_wand
+    name: "Magic Wand"
+    cost: 450
+    stats:
+      strength: 3
+      agility: 3
+      intelligence: 3
+    active:
+      has_active: true
+      cooldown: 13.0
+      max_charges: 20
+      charges: 0
+
+  # 5. Boots of Speed
+  - id: boots
+    name: "Boots of Speed"
+    cost: 500
+    stats:
+      movement_speed: 45
+
+  # 6. Power Treads
+  - id: treads
+    name: "Power Treads"
+    cost: 1400
+    stats:
+      agility: 10
+      attack_speed: 25
+      movement_speed: 45
+
+  # 7. Bottle
+  - id: bottle
+    name: "Bottle"
+    cost: 675
+    stats:
+      hp_regen: 2.0
+      mana_regen: 1.0
+    active:
+      has_active: true
+      cooldown: 0.5
+      max_charges: 3
+      charges: 3
+
+  # 8. Mekansm
+  - id: mekansm
+    name: "Mekansm"
+    cost: 1775
+    stats:
+      armor: 5
+      intelligence: 5
+      hp_regen: 2.5
+    active:
+      has_active: true
+      cooldown: 45.0
+
+  # 9. Blink Dagger
+  - id: blink
+    name: "Blink Dagger"
+    cost: 2250
+    active:
+      has_active: true
+      cooldown: 15.0
+
+  # 10. Black King Bar
+  - id: bkb
+    name: "Black King Bar"
+    cost: 4050
+    stats:
+      strength: 10
+      damage: 24
+    active:
+      has_active: true
+      cooldown: 90.0
+
+  # 11. Shadow Blade
+  - id: shadow_blade
+    name: "Shadow Blade"
+    cost: 2700
+    stats:
+      damage: 30
+      attack_speed: 20
+    active:
+      has_active: true
+      cooldown: 18.0
+
+  # 12. Eul's Scepter
+  - id: euls
+    name: "Eul's Scepter"
+    cost: 2500
+    stats:
+      intelligence: 10
+      mana_regen: 2.5
+      movement_speed: 20
+    active:
+      has_active: true
+      cooldown: 23.0
+
+  # 13. Force Staff
+  - id: force_staff
+    name: "Force Staff"
+    cost: 2200
+    stats:
+      intelligence: 10
+      hp_regen: 0.75
+    active:
+      has_active: true
+      cooldown: 19.0
+
+  # 14. Scythe of Vyse
+  - id: hex
+    name: "Scythe of Vyse"
+    cost: 5650
+    stats:
+      intelligence: 35
+      strength: 10
+      agility: 10
+      mana_regen: 5.0
+    active:
+      has_active: true
+      cooldown: 22.0
+
+  # 15. Dagon
+  - id: dagon
+    name: "Dagon"
+    cost: 2700
+    stats:
+      intelligence: 16
+      strength: 3
+      agility: 3
+    active:
+      has_active: true
+      cooldown: 35.0
+
+  # 16. Divine Rapier
+  - id: rapier
+    name: "Divine Rapier"
+    cost: 5950
+    stats:
+      damage: 350

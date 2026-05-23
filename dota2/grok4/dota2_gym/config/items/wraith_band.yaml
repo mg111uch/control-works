@@ -1,0 +1,22 @@
+# config/items/wraith_band.yaml
+name: "Wraith Band"
+internal_name: "wraith_band"
+cost: 505
+components: []
+stats:
+  strength: 0
+  agility: 7
+  intelligence: 0
+  attack_speed: 0
+  damage: 6
+  armor: 0
+  hp: 0
+  mana: 0
+  hp_regen: 0
+  mana_regen: 0
+attributes:
+  bonus_all_stats: 0
+  bonus_agility: 7
+  bonus_attack_damage: 6
+tooltip: "+7 Agility, +6 Damage"
+shop_category: "attributes"

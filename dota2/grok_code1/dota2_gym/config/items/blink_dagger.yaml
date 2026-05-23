@@ -1,0 +1,11 @@
+# config/items/blink_dagger.yaml
+name: "Blink Dagger"
+internal_name: "blink_dagger"
+cost: 2250
+components: []
+active:
+  name: "Blink"
+  range: 1200
+  cooldown: 12.0
+  damage_disable_duration: 3.0
+tooltip: "Blink up to 1200 units. Disabled for 3s after taking player damage."

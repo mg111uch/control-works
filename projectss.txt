@@ -1,0 +1,39 @@
+Solvers:- Equation,Snake cube, Minesweeper, 
+Free cell, Go, 
+Hidoku, Jodici, Kakuro, Klotski, Latin squares, 
+Lights out, MagicCube, MagicHyperCube, 
+Magic square, Magic number, Magic Triangle, 
+Nonogram, Pentomino, Connect four
+
+Arcade:-  Mario, Super Contra,  Mappy,  
+Goonies,  City connect, Bomber man, Base ball
+Alladin, Donkey Kong, Excide bike, Batman, Soccer,
+Binary land, Circus, Dr Mario, Othello, Gradius, 
+Life force, NFS, Somari, Tennis, Tiny toon, 
+Battle city , Ice climber, Checker board
+
+3D Maze navigation Webot Bug Algo
+Self driving Car
+Robot arm control
+Bipedal Walker
+Acrobot agent
+Spider robot walking on uneven terrain
+Humanoid runner on track with obstacles
+Drone navigation in 3D avoiding obstacles
+Cheetah running agent
+Robot arm Block stacking
+FiFa playing agent
+Pvtol agent
+Rocket and missile GNS
+Satellite altitude control
+
+Integrate PyTorch Neural Network Control.Involves RL training, model conversion via ONNX.js, and real-time inference.
+Add obstacles in swing up control.
+Implement an MPC controller to optimize cart movement using predictive dynamics. Requires solving optimization problems in real-time.
+Multi-Agent RL Interaction. Add a second cart-pole system, with both carts coordinating to balance their poles.
+Use WebXR to render the CartPole in Augmented Reality (AR) Mode, viewable on mobile devices.
+Plot the pole’s tip trajectory as a 3D curve, updating dynamically.
+Adaptive Physics Parameters.Allow users to adjust gravity, pole mass, or length via sliders, affecting Cannon.js dynamics.
+Add haptic feedback (via Gamepad API) when dragging the cart, simulating resistance.
+Tree search in real-time. Implement Monte Carlo Tree Search (MCTS) to plan cart actions, balancing exploration and exploitation.
+

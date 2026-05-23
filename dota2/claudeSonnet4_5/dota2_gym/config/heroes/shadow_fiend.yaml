@@ -1,0 +1,69 @@
+# Shadow Fiend Hero Configuration
+
+name: "Shadow Fiend"
+hero_id: "shadow_fiend"
+
+base_stats:
+  # Primary attributes
+  strength: 20
+  agility: 20
+  intelligence: 20
+  
+  # Attribute gains per level
+  str_gain: 3.0
+  agi_gain: 3.5
+  int_gain: 2.0
+  
+  # Derived stats
+  base_hp: 200
+  base_mana: 75
+  base_armor: 0
+  base_magic_resist: 25
+  
+  # Combat
+  base_damage_min: 49
+  base_damage_max: 59
+  base_attack_speed: 1.7
+  base_attack_range: 500
+  
+  # Movement
+  movement_speed: 310
+  turn_rate: 999  # Instant facing (no turn rate)
+
+necromastery:
+  max_souls: 36
+  damage_per_soul: 2
+  attack_range_per_soul: 3.33  # 36 souls = ~120 extra range
+
+abilities:
+  - id: shadowraze_near
+    name: "Shadowraze (Near)"
+    key: "Q"
+    cooldown: 10
+    mana_cost: 90
+    cast_range: 200
+    damage: 100
+    
+  - id: shadowraze_medium
+    name: "Shadowraze (Medium)"
+    key: "W"
+    cooldown: 10
+    mana_cost: 90
+    cast_range: 450
+    damage: 100
+    
+  - id: shadowraze_far
+    name: "Shadowraze (Far)"
+    key: "E"
+    cooldown: 10
+    mana_cost: 90
+    cast_range: 700
+    damage: 100
+    
+  - id: requiem
+    name: "Requiem of Souls"
+    key: "R"
+    cooldown: 120
+    mana_cost: 150
+    base_lines: 18
+    lines_per_soul: 0.5
