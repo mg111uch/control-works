@@ -39,43 +39,83 @@ class RayCaster:
         """
         Cast 10 rays over 180° FOV and return normalized distances.
         Rays extend in FRONT of the car (relative to car heading).
-        
+
         Args:
             car_x, car_y: Car position
             car_angle: Car heading in degrees (0 = facing up)
             track: Track object with is_on_track method
-            
+
         Returns:
             Array of 10 normalized distances (0-1) for ML input
         """
-        distances = []
-        endpoints = []
-        
-        # Convert game angle to screen angle for ray casting
-        # In game: 0°=up, 90°=right, 180°=down, 270°=left
-        # Screen: 0°=right, 90°=down, 180°=left, 270°=up
-        # To convert game angle to screen: rotate 180° 
-        # Game 0° (up) = Screen 180° (left) = add 270° to game angle
-        # screen = car_angle + 270° (rotate 180°)
-        
-        screen_angle = car_angle + 270
-        
-        start_angle = screen_angle - self.fov / 2
-        
-        for i in range(self.num_rays):
-            angle = start_angle + i * self.angle_step
-            dist, end_x, end_y = self._cast_single_ray(
-                car_x, car_y, angle, track
-            )
-            distances.append(dist)
-            endpoints.append((end_x, end_y))
-        
+        distances, endpoints = self._cast_all(car_x, car_y, car_angle, track)
+
         # Store for visualization
         self.last_endpoints = endpoints
         self.last_distances = np.array(distances)
-        
+
         # Normalize to 0-1 range
         return np.clip(np.array(distances) / self.max_distance, 0.0, 1.0)
+
+    def _cast_all(self, car_x: float, car_y: float, car_angle: float,
+                  track):
+        """Lockstep march of all rays: one batch collision query per step.
+
+        Same transition semantics as the scalar loop (first on/off flip per
+        ray triggers binary refinement), so outputs match to float noise.
+        Tracks without is_on_track_batch (e.g. test mocks) use the scalar path.
+        """
+        if not hasattr(track, "is_on_track_batch"):
+            distances, endpoints = [], []
+            start_angle = (car_angle + 270) - self.fov / 2
+            for i in range(self.num_rays):
+                dist, end_x, end_y = self._cast_single_ray(
+                    car_x, car_y, start_angle + i * self.angle_step, track)
+                distances.append(dist)
+                endpoints.append((end_x, end_y))
+            return distances, endpoints
+        # Game->screen angle (see cast_rays history): screen = game + 270.
+        start_angle = (car_angle + 270) - self.fov / 2
+        angles_rad = np.radians(
+            start_angle + np.arange(self.num_rays) * self.angle_step)
+        dirs = np.column_stack((np.cos(angles_rad), np.sin(angles_rad)))
+
+        # Same iteration count as `while distance < max: distance += step`.
+        nsteps, _d = 0, 0.0
+        while _d < self.max_distance:
+            _d += self.step_size
+            nsteps += 1
+
+        start = np.array([car_x, car_y], dtype=np.float64)
+        # (nsteps, num_rays, 2) sample lattice
+        pts = start[None, None, :] + \
+            (np.arange(1, nsteps + 1, dtype=np.float64) * self.step_size)[:, None, None] * \
+            dirs[None, :, :]
+        occ = track.is_on_track_batch(pts[:, :, 0].ravel(),
+                                      pts[:, :, 1].ravel()).reshape(nsteps, self.num_rays)
+
+        prev_on_track = track.is_on_track(car_x, car_y)
+        distances, endpoints = [], []
+        for i in range(self.num_rays):
+            col = occ[:, i]
+            flips = np.flatnonzero(col != prev_on_track)
+            if flips.size == 0:
+                end = pts[-1, i]
+                distances.append(float(self.max_distance))
+                endpoints.append((float(end[0]), float(end[1])))
+                continue
+            k = int(flips[0])
+            prev_pt = start if k == 0 else pts[k - 1, i]
+            cur_pt = pts[k, i]
+            angle_rad = float(angles_rad[i])
+            boundary_x, boundary_y = self._find_boundary(
+                float(prev_pt[0]), float(prev_pt[1]),
+                float(cur_pt[0]), float(cur_pt[1]), angle_rad, track)
+            actual_dist = math.sqrt(
+                (boundary_x - car_x) ** 2 + (boundary_y - car_y) ** 2)
+            distances.append(actual_dist)
+            endpoints.append((boundary_x, boundary_y))
+        return distances, endpoints
     
     def cast_rays_raw(self, car_x: float, car_y: float, car_angle: float,
                       track) -> List[float]:
@@ -91,18 +131,7 @@ class RayCaster:
         Returns:
             List of raw distances to boundaries
         """
-        distances = []
-        
-        screen_angle = car_angle + 270
-        start_angle = screen_angle - self.fov / 2
-        
-        for i in range(self.num_rays):
-            angle = start_angle + i * self.angle_step
-            dist, end_x, end_y = self._cast_single_ray(
-                car_x, car_y, angle, track
-            )
-            distances.append(dist)
-        
+        distances, _ = self._cast_all(car_x, car_y, car_angle, track)
         return distances
     
     def _cast_single_ray(self, start_x: float, start_y: float, 

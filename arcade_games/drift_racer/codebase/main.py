@@ -17,6 +17,9 @@ USAGE:
 4. List available tracks:
    python main.py --list-tracks
 
+5. Play a fresh procedural track (new layout every launch):
+   python main.py --random-track [--shape spline] [--seed 7]
+
 CONTROLS:
 ---------
 UP:    Accelerate
@@ -124,15 +127,37 @@ def list_tracks():
         print("No tracks found in 'tracks' directory")
 
 
-def run_game(track_name: str = None, headless: bool = False, 
-             screen: 'pygame.Surface' = None):
+def make_random_track(shape=None, seed=None):
+    """Generate a fresh procedural track (no file saved)."""
+    import json
+    import random
+    import tempfile
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'training'))
+    import gen_track
+    from models.track import Track
+    seed = seed if seed is not None else random.randint(0, 999999)
+    data, report = gen_track.generate(seed, 1, shape=shape)
+    with tempfile.NamedTemporaryFile('w', suffix='.json', delete=False) as f:
+        json.dump(data, f)
+        path = f.name
+    track = Track(path)
+    os.unlink(path)
+    print(f"Generated '{track.name}' (seed={seed}): "
+          f"{len(track.checkpoints)} checkpoints, {report}")
+    return track
+
+
+def run_game(track_name: str = None, headless: bool = False,
+             screen: 'pygame.Surface' = None, track_obj=None):
     """Run the game with specified track."""
     from controllers.track_loader import TrackLoader
     from controllers.game_controller import GameController
-    
+
     # Load track
     loader = TrackLoader()
-    if track_name:
+    if track_obj is not None:
+        track = track_obj
+    elif track_name:
         track = loader.load_track(track_name)
     else:
         track = loader.load_default_track()
@@ -170,20 +195,42 @@ def main():
         action='store_true',
         help='Show track selection menu'
     )
+    parser.add_argument(
+        '--random-track',
+        action='store_true',
+        help='Generate a fresh procedural track instead of loading one'
+    )
+    parser.add_argument(
+        '--shape',
+        type=str,
+        choices=['ellipse', 'rect', 'stadium', 'spline'],
+        default=None,
+        help='Shape family for --random-track (default: random mix)'
+    )
+    parser.add_argument(
+        '--seed',
+        type=int,
+        default=None,
+        help='Seed for --random-track (default: new random track every launch)'
+    )
     
     args = parser.parse_args()
     
     if args.list_tracks:
         list_tracks()
     else:
+        track_obj = None
+        if args.random_track:
+            track_obj = make_random_track(shape=args.shape, seed=args.seed)
+            args.track = None
         # Show menu if no track specified (default behavior)
-        if args.track is None and not args.headless:
+        if args.track is None and track_obj is None and not args.headless:
             selected_track = show_track_menu()
             if selected_track is None:
                 return  # User quit
             args.track = selected_track
         
-        run_game(args.track, args.headless)
+        run_game(args.track, args.headless, track_obj=track_obj)
 
 
 if __name__ == "__main__":

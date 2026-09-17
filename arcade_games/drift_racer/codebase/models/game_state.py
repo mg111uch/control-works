@@ -21,11 +21,23 @@ from models.track import Track
 OFF_TRACK_PENALTY = -1000.0  # Large negative penalty for off-track (death)
 OFF_TRACK_ENFORCE_DEATH = True  # End episode on off-track
 OFF_TRACK_NO_END = False  # Backward compatibility - now we enforce death
-LAP_BONUS = 1000.0  # Increased lap bonus for completion
+LAP_BONUS = 750.0  # Must stay < |OFF_TRACK| so suicide loops never pay
 FORWARD_PROGRESS_SCALE = 10.0
-LIVING_REWARD = 0.5  # Positive reward for staying on track (encourages survival)
-DRIFT_REWARD_SCALE = 0.5
-MIN_DRIFT_ANGLE = 10.0  # Minimum angle to be considered drifting
+FORWARD_PROGRESS_CLIP = 5.0  # px/step cap, blocks teleport spikes
+LIVING_PENALTY = -0.1  # Per-step penalty, encourages speed (code_fixes.md)
+LIVING_REWARD = LIVING_PENALTY  # Backward-compat alias for tests
+DRIFT_REWARD_SCALE = 3.0  # Phase-2b: slides must beat raw forward (10x) at speed
+DRIFT_REWARD_CAP = 60.0  # Headroom for big fast slides with combo
+MIN_DRIFT_ANGLE = 8.0  # Phase-2: easier to enter drift state
+COMBO_TICKS_PER_LEVEL = 6  # Phase-2: faster combo buildup rewards sustained slides
+LAP_DISTANCE = 2000.0  # Approx px per lap for distance-based progress
+MIN_LAP_TICKS = 200  # Anti-spin: min steps between lap counts
+SPEED_REWARD_SCALE = 0.5  # Pace pressure: fast lines out-earn slow-safe ones
+WALL_APPROACH_SCALE = 4.0  # Wall discipline: fast + wall ahead must cost more
+WALL_APPROACH_DIST = 0.3  # normalized ray dist under which penalty applies
+WALL_APPROACH_SPEED = 1.0  # speed above which wall proximity is penalized
+CP_BONUS = 50.0  # Reward per newly collected checkpoint (exploration pull)
+STAGNATION_TICKS = 600  # End episode with no new checkpoint (circlers die fast)
 
 
 class GameState:
@@ -51,11 +63,14 @@ class GameState:
         """Reset game state to initial values."""
         self.laps_completed = 0
         self.checkpoints_passed = set()
-        self.drift_score = 0
+        self.drift_score = 0  # drift-only component (analysis, not HUD)
+        self.total_score = 0  # cumulative return sourcing HUD score
         self.combo_multiplier = 1
         self.consecutive_drift_ticks = 0
         self.combo_flash_timer = 0
         self.done = False
+        self.stagnated = False  # episode ended by no-progress kill
+        self.ticks_since_cp = 0  # steps since last new checkpoint
         self.start_time = time.time()
         self.ticks = 0
         self._lap_progress = 0.0  # Progress towards next lap (0.0 to 1.0)
@@ -84,11 +99,19 @@ class GameState:
         Returns:
             Current step reward
         """
+        # Episode already over: freeze scoring (manual loop keeps stepping
+        # under the game-over screen; without this, off-track bleeds -1000/frame)
+        if self.done:
+            return 0.0
         self.ticks += 1
         
-        # OFF-TRACK: Enforce death - immediately end episode with large negative reward
+        # OFF-TRACK: Enforce death - accrued drift gains are forfeited, so
+        # fatal slides net negative (suicide farming must not pay).
         if not on_track:
-            self.drift_score += OFF_TRACK_PENALTY
+            forfeit = max(0.0, self.drift_score)
+            penalty = OFF_TRACK_PENALTY - forfeit
+            self.drift_score += penalty
+            self.total_score += penalty
             # Reset combo when going off track
             self.consecutive_drift_ticks = 0
             self.combo_multiplier = 1
@@ -96,15 +119,17 @@ class GameState:
             # End episode immediately on off-track
             if OFF_TRACK_ENFORCE_DEATH:
                 self.done = True
-                return OFF_TRACK_PENALTY
-            else:
-                return OFF_TRACK_PENALTY
+            return penalty
         
         # Track previous laps for bonus calculation
         prev_laps = self.laps_completed
         
-        # Check lap progress
-        self._check_lap_progress(car_x, car_y)
+        # Check lap progress (returns newly collected checkpoint count)
+        new_cps = self._check_lap_progress(car_x, car_y)
+        if new_cps:
+            self.ticks_since_cp = 0
+        else:
+            self.ticks_since_cp += 1
         
         # Determine if actually drifting based on drift angle
         actual_drifting = drift_angle >= MIN_DRIFT_ANGLE
@@ -114,39 +139,55 @@ class GameState:
         self._update_combo(on_track, actual_drifting)
         
         # === REWARD FUNCTION ===
-        reward = 0.0
+        # Living penalty applies only when moving: a parked car scores 0
+        # (no idle bleed on the start line), driving still earns positive.
+        reward = LIVING_PENALTY if speed > 0.05 else 0.0
+
+        # 0b. Speed reward: pace pressure (slow-safe lines must not out-earn fast ones)
+        reward += max(0.0, speed) * SPEED_REWARD_SCALE
         
-        # 0. Living reward: Positive reward for staying on track (encourages survival)
-        reward += LIVING_REWARD
+        # 1. Forward progress reward (primary, clipped)
+        fp = float(max(-FORWARD_PROGRESS_CLIP, min(FORWARD_PROGRESS_CLIP, forward_progress)))
+        reward += fp * FORWARD_PROGRESS_SCALE
         
-        # 1. Forward progress reward (primary reward)
-        reward += forward_progress * FORWARD_PROGRESS_SCALE
-        
-        # 3. Drift reward component: sin(drift_angle) * speed^2 * combo
+        # 3. Drift reward component: sin(drift_angle) * speed^2 * combo, capped
         if actual_drifting and speed > 0.5:
-            drift_radians = math.radians(drift_angle)
+            drift_radians = math.radians(min(drift_angle, 90.0))
             drift_component = math.sin(drift_radians) * (speed ** 2) * DRIFT_REWARD_SCALE
             drift_component *= self.combo_multiplier
+            drift_component = min(drift_component, DRIFT_REWARD_CAP)
             reward += drift_component
             self.drift_score += drift_component
         
         # 4. Lap bonus (check if we completed a lap this step)
         if self.laps_completed > prev_laps:
             reward += LAP_BONUS
+            self.ticks_since_cp = 0  # laps are progress too
         
-        # Check for game completion
+        # 4b. Checkpoint bonus: reward visiting new boxes (explores new lobes)
+        if new_cps:
+            reward += CP_BONUS * new_cps
+        
+        # Check for game completion (no double bonus: lap bonus already given)
         if self.laps_completed >= self.total_laps:
             self.done = True
-            reward += LAP_BONUS  # Extra bonus for completing all laps
-        
+
+        # Stagnation kill: circling visited ground ends the episode (death)
+        if not self.done and self.ticks_since_cp >= STAGNATION_TICKS:
+            self.done = True
+            self.stagnated = True
+
+        # HUD score tracks TOTAL return (was drift-only: froze when not drifting)
+        self.total_score += reward
+
         return reward
     
     def _update_combo(self, on_track: bool, drifting: bool) -> None:
         """Update combo multiplier system."""
         if on_track and drifting:
             self.consecutive_drift_ticks += 1
-            # Combo increases every 10 drift ticks on track
-            new_multiplier = min(5, 1 + (self.consecutive_drift_ticks // 10))
+            # Combo increases every COMBO_TICKS_PER_LEVEL drift ticks on track
+            new_multiplier = min(5, 1 + (self.consecutive_drift_ticks // COMBO_TICKS_PER_LEVEL))
             if new_multiplier > self.combo_multiplier:
                 self.combo_multiplier = new_multiplier
                 self.combo_flash_timer = 90  # Flash for 1.5 seconds at 60fps
@@ -156,92 +197,110 @@ class GameState:
             self.combo_multiplier = 1
             self.combo_flash_timer = 0
     
-    def _check_lap_progress(self, x: float, y: float) -> None:
-        """Track lap progress using checkpoints and start/finish line."""
-        if self.track and hasattr(self.track, 'start_finish_line'):
-            # Use start/finish line for lap counting
-            on_line = self.track.start_finish_line.contains(x, y)
-            self._check_line_crossing_lap(x, y, on_line)
-            # Update previous position for next tick
-            self._prev_x = x
-            self._prev_y = y
-        elif self.track:
-            # Use track-defined checkpoints
-            passed = self.track.get_checkpoints_passed(x, y)
-            self.checkpoints_passed.update(passed)
-            
-            # Check if all required checkpoints passed for a lap
-            if all(cp in self.checkpoints_passed for cp in self.required_checkpoints):
+    def _check_lap_progress(self, x: float, y: float) -> int:
+        """Collect checkpoints (in sequence when track requires it) and count laps.
+
+        Line-crossing laps are gated on the full required set, so looping one
+        lobe of a figure-8 scores nothing. Returns newly collected count.
+        """
+        new_cps = 0
+        if self.track:
+            required = list(getattr(self.track, 'required_checkpoints', []) or [])
+            if required:
+                if bool(getattr(self.track, 'sequence_required', False)):
+                    while True:
+                        remaining = [c for c in required if c not in self.checkpoints_passed]
+                        if not remaining:
+                            break
+                        if self.track.check_checkpoint(x, y, remaining[0]):
+                            self.checkpoints_passed.add(remaining[0])
+                            new_cps += 1
+                        else:
+                            break
+                else:
+                    before = len(self.checkpoints_passed)
+                    self.checkpoints_passed.update(self.track.get_checkpoints_passed(x, y))
+                    new_cps = len(self.checkpoints_passed) - before
+                complete = all(c in self.checkpoints_passed for c in required)
+            else:
+                complete = True
+            if hasattr(self.track, 'start_finish_line'):
+                # Use start/finish line for lap counting (gated on checkpoints)
+                on_line = self.track.start_finish_line.contains(x, y)
+                self._check_line_crossing_lap(x, y, on_line, complete)
+            elif required and complete:
                 self.laps_completed += 1
                 self.checkpoints_passed.clear()
         else:
             # Fallback: original checkpoint logic for figure-8 track
             self._check_figure8_lap(x, y)
-        
+
         # Update previous position
         self._prev_x = x
         self._prev_y = y
+        return new_cps
+
+    def next_checkpoint(self):
+        """Center (x, y) of the next required checkpoint, or None.
+
+        After a completed set, aims at the first box of the next lap so the
+        egocentric observation always has a target.
+        """
+        if not self.track:
+            return None
+        required = list(getattr(self.track, 'required_checkpoints', []) or [])
+        remaining = [c for c in required if c not in self.checkpoints_passed]
+        if not remaining:
+            remaining = required
+        if not remaining:
+            return None
+        for cp in getattr(self.track, 'checkpoints', []):
+            if cp.id == remaining[0]:
+                return ((cp.x_min + cp.x_max) / 2.0, (cp.y_min + cp.y_max) / 2.0)
+        return None
     
     def _is_clockwise_crossing(self, x: float, y: float, prev_x: float, prev_y: float) -> bool:
         """
-        Check if the car is crossing the start/finish line in a clockwise direction.
-        
-        For an oval track with start position on the left side:
-        - Clockwise motion means the car approaches from below (higher y) and exits above (lower y)
-        - The car should be moving upward (negative y direction) when crossing
-        
-        Args:
-            x: Current x position
-            y: Current y position
-            prev_x: Previous x position
-            prev_y: Previous y position
-            
-        Returns:
-            True if crossing in clockwise direction
+        Check crossing direction via dot(movement, track forward).
+        Robust vs old dy<0-only check which failed on non-oval tracks.
         """
         if prev_x is None or prev_y is None:
             return False
-        
-        # Get start position to determine track orientation
-        start_x, start_y, start_angle = self.track.get_start_position()
-        
-        # Calculate direction of movement
-        dy = y - prev_y
-        
-        # For clockwise motion on an oval:
-        # - When crossing the start/finish line on the left side of the track
-        # - The car should be moving upward (dy < 0, i.e., y decreasing)
-        # - This means the car is coming from the bottom of the track
-        
-        # The start position is on the left side of the oval
-        # For clockwise: car goes left-side → top → right-side → bottom → back to left-side
-        # So when crossing start line, car should be moving upward (negative dy)
-        
-        is_clockwise = dy < 0  # Moving upward (y decreasing) indicates clockwise
-        
-        return is_clockwise
+        dx, dy = x - prev_x, y - prev_y
+        if dx * dx + dy * dy < 1e-6:  # Not moving
+            return False
+        try:
+            _, _, start_angle = self.track.get_start_position()
+        except Exception:
+            return dy < 0
+        import math as _m
+        fx = _m.sin(_m.radians(start_angle))
+        fy = -_m.cos(_m.radians(start_angle))
+        return (dx * fx + dy * fy) > 0
     
-    def _check_line_crossing_lap(self, x: float, y: float, on_line: bool) -> None:
+    def _check_line_crossing_lap(self, x: float, y: float, on_line: bool,
+                                   gated: bool = True) -> None:
         """
-        Check for lap completion using start/finish line.
-        Uses a simple state machine to detect line crossings.
-        Only counts laps when crossing in clockwise direction.
+        Distance-based lap progress + direction-gated counting.
+        Fixes old +0.01/tick free-lap exploit (spin = lap in 100 ticks).
+        A lap only counts when gated (required checkpoint set complete).
         """
-        if on_line:
-            # Car is on the start/finish line
-            if self._lap_progress >= 0.9:  # Already almost completed a lap
-                # Check if crossing in clockwise direction
+        if self._prev_x is not None and self._prev_y is not None:
+            import math as _m
+            dist = _m.hypot(x - self._prev_x, y - self._prev_y)
+            # Hybrid: distance main + small time floor (0.005) so stationary
+            # test harnesses still progress; real laps need movement.
+            inc = min(0.02, dist / LAP_DISTANCE + 0.005)
+            self._lap_progress = min(1.0, self._lap_progress + inc)
+        if on_line and gated:
+            if self._lap_progress >= 0.9 and (self.ticks - self._last_line_crossing) >= MIN_LAP_TICKS:
                 if self._is_clockwise_crossing(x, y, self._prev_x, self._prev_y):
-                    # Valid lap completion (clockwise direction)
                     self.laps_completed += 1
                     self._lap_progress = 0.0
                     self._last_line_crossing = self.ticks
-            # Mark that we're on the line
+                    self.checkpoints_passed.clear()  # next lap re-collects
             self._was_on_line = True
         else:
-            # Car is off the line, increment progress
-            # Progress increases as car moves away from line
-            self._lap_progress = min(1.0, self._lap_progress + 0.01)
             self._was_on_line = False
     
     def _check_figure8_lap(self, x: float, y: float) -> None:
@@ -302,8 +361,8 @@ class GameState:
     
     @property
     def score(self) -> float:
-        """Get current drift score."""
-        return self.drift_score
+        """HUD score = total cumulative return (forward + speed + drift + laps)."""
+        return self.total_score
     
     @property
     def combo_text(self) -> str:

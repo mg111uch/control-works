@@ -1,18 +1,12 @@
-# AI Agent Development Guidelines 
-
-## TASK
-
-Each enemy only takes single hit from tower and dies. Enemy should survive for multiple hits before dying.  Fix this issue. 
-
 ## Project Paths
 
-- **Project_root:**  `/home/manigupt/Hello/python/control/arcade_games/tower_defence`
-- **Source_code:** (Working directory) `/home/manigupt/Hello/python/control/arcade_games/tower_defence/codebase`
+- **Project_root:**  `/home/manigupt/Hello/control-works`
+- **Source_code:** (Working directory) `/home/manigupt/Hello/control-works`
 
 ## Code Execution & Validation Environment
 
-- **Command to run project:** `cd /home/manigupt/Hello/python/control/arcade_games/tower_defence/codebase && conda run -n myenv python main.py`.
-- **Command to run Tests :** `cd /home/manigupt/Hello/python/control/arcade_games/tower_defence/codebase && conda run -n myenv python -m pytest tests/ -v`
+- **Command to run project:** `conda run -n myenv python <subdir>/<script>.py` from `/home/manigupt/Hello/control-works`
+- Conda env `myenv` is shared with the PIE repo (`/home/manigupt/Hello/Agentic_Unit_PIE`); install NOTHING without user approval.
 
 ## Core principles
 
@@ -27,13 +21,3 @@ Each enemy only takes single hit from tower and dies. Enemy should survive for m
 - Max **400–500 lines** per file (including tests & comments).
 - **One public class/struct/interface** per file (ECS: one component OR one system).
 - Split large files ruthlessly when they exceed 500 LOC or violate single responsibility.
-
-## Testing Mandates (Non-Negotiable)
-
-Every feature/change **must** include:
-
-- **Unit tests** for new/altered systems & controllers (mock event bus, components).
-- **Red → Green → Refactor**: Agent first writes failing test → implements → passes.
-- Aim for **>80% coverage** on logic-heavy files (systems/controllers).
-
-Use your language's test framework (e.g., pytest/unittest).

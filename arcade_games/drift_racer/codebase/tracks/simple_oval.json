@@ -30,17 +30,17 @@
   ],
   
   "checkpoints": [
-    {"id": 0, "type": "position", "x_min": 400, "x_max": 500, "y_min": 50, "y_max": 150},
-    {"id": 1, "type": "position", "x_min": 450, "x_max": 550, "y_min": 150, "y_max": 250},
-    {"id": 2, "type": "position", "x_min": 400, "x_max": 500, "y_min": 250, "y_max": 350},
-    {"id": 3, "type": "position", "x_min": 100, "x_max": 200, "y_min": 250, "y_max": 350},
-    {"id": 4, "type": "position", "x_min": 50, "x_max": 150, "y_min": 150, "y_max": 250},
-    {"id": 5, "type": "position", "x_min": 100, "x_max": 200, "y_min": 50, "y_max": 150}
+    {"id": 0, "type": "position", "x_min": 120, "x_max": 180, "y_min": 170, "y_max": 230},
+    {"id": 1, "type": "position", "x_min": 170, "x_max": 230, "y_min": 60, "y_max": 120},
+    {"id": 2, "type": "position", "x_min": 370, "x_max": 430, "y_min": 60, "y_max": 120},
+    {"id": 3, "type": "position", "x_min": 420, "x_max": 480, "y_min": 170, "y_max": 230},
+    {"id": 4, "type": "position", "x_min": 370, "x_max": 430, "y_min": 280, "y_max": 340},
+    {"id": 5, "type": "position", "x_min": 170, "x_max": 230, "y_min": 280, "y_max": 340}
   ],
   
   "lap_completion": {
     "required_checkpoints": [0, 1, 2, 3, 4, 5],
-    "sequence_required": false
+    "sequence_required": true
   },
   
   "visual": {

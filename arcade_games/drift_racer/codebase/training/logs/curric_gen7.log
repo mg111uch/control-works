@@ -1,0 +1,23 @@
+pygame 2.5.2 (SDL 2.28.2, Python 3.12.1)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+/home/manigupt/miniconda3/envs/myenv/lib/python3.12/site-packages/torch/cuda/__init__.py:58: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+Using Genetic Algorithm (Neuroevolution) for training
+Using 4 parallel environments
+training pool: ['simple_oval']
+Seeded population from /home/manigupt/Hello/control-works/arcade_games/drift_racer/codebase/training/models/drift_policy_model_best.pth (champion + mutants)
+Resumed from /home/manigupt/Hello/control-works/arcade_games/drift_racer/codebase/training/models/checkpoint.pt at gen 7 (pool: ['simple_oval'])
+Workers: 3 processes x 4 envs
+  [Gen 7] Evaluated 5/35 agents...
+  [Gen 7] Evaluated 10/35 agents...
+  [Gen 7] Evaluated 15/35 agents...
+  [Gen 7] Evaluated 20/35 agents...
+  [Gen 7] Evaluated 25/35 agents...
+  [Gen 7] Evaluated 30/35 agents...
+  [Gen 7] Evaluated 35/35 agents...
+[13:05:27] Gen 7/7 | Best(clean): laps=2.0, minlap=0.0, steps=3126, deaths=12, drift=0.21, uniq=4, ent=1.07 | Avg(clean): laps=0.09, steps=460, deaths=33.6 | TPS: 1580 (avg: 10548) | Time: 482.2s (total: 8.0m)
+
+Training completed!
+Best fitness achieved: laps=2.00, steps=3126, deaths=12
+Model saved to /home/manigupt/Hello/control-works/arcade_games/drift_racer/codebase/training/models/drift_policy_model.pth
+Run with --visualize to autoplay (no prompt, CI-safe).

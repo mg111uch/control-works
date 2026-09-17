@@ -108,8 +108,8 @@ class Car:
         self.vy *= friction
         self.x += self.vx
         self.y += self.vy
-        self.x %= SCREEN_WIDTH
-        self.y %= SCREEN_HEIGHT
+        # No screen wrap: leaving track must yield is_on_track=False
+        # so GameState off-track death triggers instead of teleporting.
         self.speed = math.sqrt(self.vx**2 + self.vy**2)
         
         # Calculate drift angle (angle between velocity vector and car heading)
@@ -138,11 +138,10 @@ class Car:
         velocity_angle = math.degrees(math.atan2(self.vx, -self.vy))
         
         # Calculate difference between heading and velocity direction
-        angle_diff = abs(self.angle - velocity_angle)
-        
-        # Normalize to 0-180 range
-        if angle_diff > 180:
-            angle_diff = 360 - angle_diff
+        # Wrap to [0, 180]: heading is unbounded (accumulates spins),
+        # velocity_angle is [-180, 180], so a single `if > 180` check
+        # mis-scores multi-spin deltas (e.g. 270 -> 90 max drift).
+        angle_diff = abs((self.angle - velocity_angle + 180.0) % 360.0 - 180.0)
         
         self.drift_angle = angle_diff
     
@@ -222,9 +221,11 @@ class Car:
         heading_x = math.sin(math.radians(self.angle))
         heading_y = -math.cos(math.radians(self.angle))
         
-        # Movement vector
+        # Movement vector (guard against teleport jumps)
         dx = self.x - self.prev_x
         dy = self.y - self.prev_y
+        if abs(dx) > SCREEN_WIDTH / 2 or abs(dy) > SCREEN_HEIGHT / 2:
+            dx, dy = 0.0, 0.0
         
         # Dot product gives forward movement
         forward_progress = dx * heading_x + dy * heading_y
@@ -235,22 +236,36 @@ class Car:
         
         return forward_progress
     
-    def get_state(self) -> np.ndarray:
+    def get_state(self, next_cp=None) -> np.ndarray:
         """
-        Get normalized state array for AI training.
-        
+        Get egocentric state array for AI training (no absolute position,
+        so policies transfer across track shapes).
+
+        Args:
+            next_cp: Optional (x, y) center of next checkpoint target.
+
         Returns:
             State array with 15 features:
-            - 5 car features: x, y, angle, speed, drift_angle (normalized)
+            - 5 car features: speed, drift_angle, sin/cos bearing to next
+              checkpoint, normalized distance to it (all track-relative)
             - 10 ray distances to track boundaries (normalized)
         """
-        # Base car state
+        if next_cp is None:
+            sin_b, cos_b, dist_n = 0.0, 1.0, 0.0
+        else:
+            cx, cy = next_cp
+            bearing = math.degrees(math.atan2(cx - self.x, -(cy - self.y)))
+            rel = (bearing - self.angle + 180.0) % 360.0 - 180.0
+            sin_b = math.sin(math.radians(rel))
+            cos_b = math.cos(math.radians(rel))
+            dist_n = float(np.clip(math.hypot(cx - self.x, cy - self.y) / 720.0, 0.0, 1.0))
+        # Base car state (egocentric only)
         car_state = np.array([
-            self.x / SCREEN_WIDTH,
-            self.y / SCREEN_HEIGHT,
-            (self.angle % 360) / 360.0,
-            self.speed / 10.0,
-            self.drift_angle / 180.0,  # Normalize drift angle (0-180 -> 0-1)
+            float(np.clip(self.speed / 10.0, 0.0, 2.0)),
+            float(np.clip(self.drift_angle / 180.0, 0.0, 1.0)),
+            sin_b,
+            cos_b,
+            dist_n,
         ], dtype=np.float32)
         
         # Ray cast distances (10 rays, normalized)

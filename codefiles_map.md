@@ -1,23 +1,10 @@
 # 🗺️ CODEBASE ATLAS
-**Generated:** 2026-02-13 13:33:43
-
-**Quick Navigation:** This is Layer 1 (overview). For details, see children/ folder.
-
----
-
-Legend: │=sep ►=internal ●=external ⚡=entry 🔴=HIGH 🟡=MED 🟢=LOW ⚪=SAFE
 
 ## Codebase size
 Total files processed: 27
 Total lines of code: 4348
 Total tokens: 42985
 ## End Codebase size
-
-Entries: F001,F001:main,F002,F005,F010:run,F021,F022,F024,F025,F026
-
-HighRisk: F001:main⚪,F010:run⚪
-
-Children: codebase.md,utils.md,training.md,tracks.md,controllers.md,models.md,views.md,tests.md
 
 ## Directory Structure 
 - **Project path:** `/home/manigupt/Hello/python/control/arcade_games/drift_racer`

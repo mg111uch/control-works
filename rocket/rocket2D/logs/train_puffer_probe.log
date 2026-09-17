@@ -1,0 +1,47 @@
+/home/manigupt/miniconda3/envs/myenv/lib/python3.12/site-packages/torch/cuda/__init__.py:58: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+/home/manigupt/miniconda3/envs/myenv/lib/python3.12/site-packages/pygame/pkgdata.py:25: DeprecationWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html
+  from pkg_resources import resource_stream, resource_exists
+/home/manigupt/miniconda3/envs/myenv/lib/python3.12/site-packages/pkg_resources/__init__.py:2871: DeprecationWarning: Deprecated call to `pkg_resources.declare_namespace('google')`.
+Implementing implicit namespace packages (as specified in PEP 420) is preferred to `pkg_resources.declare_namespace`. See https://setuptools.pypa.io/en/latest/references/keywords.html#keyword-namespace-packages
+  declare_namespace(pkg)
+/home/manigupt/miniconda3/envs/myenv/lib/python3.12/site-packages/pkg_resources/__init__.py:2871: DeprecationWarning: Deprecated call to `pkg_resources.declare_namespace('google.cloud')`.
+Implementing implicit namespace packages (as specified in PEP 420) is preferred to `pkg_resources.declare_namespace`. See https://setuptools.pypa.io/en/latest/references/keywords.html#keyword-namespace-packages
+  declare_namespace(pkg)
+/home/manigupt/miniconda3/envs/myenv/lib/python3.12/site-packages/pkg_resources/__init__.py:2350: DeprecationWarning: Deprecated call to `pkg_resources.declare_namespace('google')`.
+Implementing implicit namespace packages (as specified in PEP 420) is preferred to `pkg_resources.declare_namespace`. See https://setuptools.pypa.io/en/latest/references/keywords.html#keyword-namespace-packages
+  declare_namespace(parent)
+upd 0 p=0.00 pl 0.0030 vl 0.001 kl 0.00387 steps 2048
+upd 1 p=0.10 pl 0.0020 vl 0.013 kl 0.00132 steps 2048
+upd 2 p=0.20 pl 0.0006 vl 0.870 kl 0.00307 steps 2048
+upd 3 p=0.30 pl 0.0011 vl 0.008 kl 0.00097 steps 2048
+upd 4 p=0.40 pl 0.0012 vl 0.007 kl -0.00016 steps 2048
+upd 5 p=0.50 pl 0.0003 vl 0.004 kl 0.00019 steps 2048
+upd 6 p=0.60 pl 0.0030 vl 0.009 kl 0.00137 steps 2048
+upd 7 p=0.70 pl 0.0020 vl 0.005 kl -0.00027 steps 2048
+upd 8 p=0.80 pl -0.0021 vl 0.005 kl 0.00073 steps 2048
+upd 9 p=0.90 pl 0.0008 vl 0.006 kl 0.00053 steps 2048
+EVAL upd 9 clean -430.6 rate 0.00 disp 0
+upd 10 p=1.00 pl 0.0022 vl 0.005 kl 0.00401 steps 2048
+upd 11 p=1.00 pl 0.0008 vl 0.004 kl -0.00049 steps 2048
+upd 12 p=1.00 pl 0.0013 vl 0.003 kl -0.00047 steps 2048
+upd 13 p=1.00 pl 0.0023 vl 0.002 kl 0.00048 steps 2048
+upd 14 p=1.00 pl 0.0007 vl 0.003 kl 0.00064 steps 2048
+upd 15 p=1.00 pl 0.0017 vl 0.003 kl 0.00097 steps 2048
+upd 16 p=1.00 pl 0.0006 vl 0.851 kl 0.00137 steps 2048
+upd 17 p=1.00 pl 0.0019 vl 0.003 kl 0.00053 steps 2048
+upd 18 p=1.00 pl 0.0010 vl 0.001 kl -0.00019 steps 2048
+upd 19 p=1.00 pl 0.0002 vl 0.004 kl -0.00005 steps 2048
+EVAL upd 19 clean -430.6 rate 0.00 disp 0
+upd 20 p=1.00 pl 0.0029 vl 0.002 kl 0.00115 steps 2048
+upd 21 p=1.00 pl 0.0003 vl 0.441 kl -0.00066 steps 2048
+upd 22 p=1.00 pl 0.0013 vl 0.005 kl 0.00066 steps 2048
+upd 23 p=1.00 pl 0.0006 vl 0.007 kl 0.00217 steps 2048
+upd 24 p=1.00 pl 0.0017 vl 0.001 kl 0.00066 steps 2048
+upd 25 p=1.00 pl 0.0012 vl 0.003 kl 0.00286 steps 2048
+upd 26 p=1.00 pl 0.0017 vl 0.003 kl -0.00028 steps 2048
+upd 27 p=1.00 pl 0.0006 vl 0.004 kl 0.00048 steps 2048
+upd 28 p=1.00 pl 0.0004 vl 0.002 kl 0.00364 steps 2048
+upd 29 p=1.00 pl 0.0025 vl 0.003 kl 0.00558 steps 2048
+EVAL upd 29 clean -430.7 rate 0.00 disp 1
+saved puffer_policy.pth

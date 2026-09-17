@@ -10,7 +10,8 @@ from typing import Optional, Tuple
 
 from models.car import Car
 from models.track import Track
-from models.game_state import GameState
+from models.game_state import (GameState, WALL_APPROACH_DIST,
+                                 WALL_APPROACH_SCALE, WALL_APPROACH_SPEED)
 from controllers.input_controller import InputController
 from views.track_renderer import TrackRenderer
 from views.car_renderer import CarRenderer
@@ -74,6 +75,7 @@ class GameController:
         self.car.set_track(self.track)  # Enable ray casting
         self.game_state.reset()
         self._last_step_off_track_death = False  # Track off-track deaths
+        self._last_step_stagnated = False  # Track stagnation kills
     
     def step(self, action: int) -> Tuple:
         """
@@ -108,12 +110,22 @@ class GameController:
             drift_angle=drift_angle, forward_progress=forward_progress
         )
         
-        # Get state for AI
-        state = self.car.get_state()
+        # Get state for AI (egocentric: bearing to next checkpoint)
+        state = self.car.get_state(next_cp=self.game_state.next_checkpoint())
+
+        # Wall-approach discipline: fast into a wall must cost more than the
+        # speed+drift gain, so braking before corners earns gradient. Uses the
+        # already-cast rays in state[5:15] (center indices ~ heading).
+        if not self.game_state.done and self.car.speed > WALL_APPROACH_SPEED:
+            fwd_wall = float(min(state[8:12]))
+            if fwd_wall < WALL_APPROACH_DIST:
+                reward -= (WALL_APPROACH_SCALE * (self.car.speed ** 2)
+                           * (WALL_APPROACH_DIST - fwd_wall) / WALL_APPROACH_DIST)
         
         # Track if episode ended due to off-track
         self._last_step_off_track_death = was_off_track and self.game_state.done
-        
+        self._last_step_stagnated = self.game_state.stagnated and self.game_state.done
+
         return state, reward, self.game_state.done
     
     def run(self) -> None:
@@ -245,7 +257,8 @@ class GameEnv:
     def reset(self):
         """Reset the environment to initial state."""
         self.controller.reset()
-        return self.controller.car.get_state()
+        gs = self.controller.game_state
+        return self.controller.car.get_state(next_cp=gs.next_checkpoint())
     
     def step(self, action: int):
         """
@@ -312,6 +325,11 @@ class GameEnv:
     def off_track_death(self):
         """Get whether last episode ended due to off-track death."""
         return self.controller._last_step_off_track_death
+
+    @property
+    def stagnated(self):
+        """Get whether last episode ended by stagnation kill."""
+        return self.controller._last_step_stagnated
     
     @property
     def car(self):

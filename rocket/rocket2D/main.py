@@ -1,4 +1,5 @@
 import sys
+from pathlib import Path
 import pygame
 import time
 import math
@@ -8,6 +9,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import matplotlib.pyplot as plt
+
+BASE_DIR = Path(__file__).resolve().parent
 
 class RocketEnv:
     def __init__(self, render=False):
@@ -25,7 +28,7 @@ class RocketEnv:
                 return
             try:
                 # Use convert_alpha() for better rendering of transparent backgrounds
-                self.falcon_original = pygame.image.load("imgs/falcon9_2d_thrust.png").convert_alpha()
+                self.falcon_original = pygame.image.load(str(BASE_DIR / "imgs/falcon9_2d_thrust.png")).convert_alpha()
             except pygame.error:
                 # Handle the case where the image isn't found
                 print("Error: Could not load image 'imgs/falcon9_2d_thrust.png'.")
@@ -50,11 +53,12 @@ class RocketEnv:
             self.font_color_black = pygame.Color(0, 0, 0)
             self.font_color_white = pygame.Color(255, 255, 255)
 
-        # Rocket parameters
-        self.Raptor_thrust = 36 * 2.5 * 1000 * 1000
-        self.dryMass = 1500 * 1000  # kg (Starship dry mass)
-        self.propMass_initial = 3400 * 1000  # kg (Starship propellant mass)
-        self.fuelConsumptionRate = 25714  # kg/s (estimated for Starship)
+        # Rocket parameters (Starship-class, realistic T/W ~1.06)
+        self.dt = 0.02  # fixed physics step (s), not wall-clock
+        self.Raptor_thrust = 13.8e6  # 6x Raptor ~2.3MN
+        self.dryMass = 120 * 1000  # kg
+        self.propMass_initial = 1200 * 1000  # kg
+        self.fuelConsumptionRate = 4000  # kg/s at full thrust
 
         # Physics constants
         self.G = 6.67430e-11  # Gravitational constant
@@ -65,9 +69,12 @@ class RocketEnv:
         self.airDensity = 1.225
         self.lever_arm = 20  # meters, approximate distance from COM to thrust point
 
-        # Target position
+        # Target position (meters above launch pad, viewport-visible)
+        self.X_RANGE = (-350, 350)
+        self.ALT_RANGE = (100, 500)
         self.target_x = 0
-        self.target_y = 1000  # meters above ground
+        self.target_alt = 300
+        self.target_y = None  # resolved in reset() as y_reset + target_alt
 
         # Action and observation spaces
         self.action_space = {'thrust_angle': (-30, 30), 'thrust_multiplier': (0, 1)}
@@ -75,11 +82,18 @@ class RocketEnv:
 
         self.reset()
 
-    def reset(self):
+    def sample_target(self):
+        self.target_x = random.uniform(*self.X_RANGE)
+        self.target_alt = random.uniform(*self.ALT_RANGE)
+
+    def reset(self, random_target=False):
         # Initial state
         self.x = 0
         self.y_reset = -300 + 40
         self.y = self.y_reset
+        if random_target:
+            self.sample_target()
+        self.target_y = self.y_reset + self.target_alt
         self.dx = 0
         self.dy = 0
         self.theta = 0
@@ -91,31 +105,35 @@ class RocketEnv:
         self.has_launched = False
         self.wind_magnitude = 0
         self.wind_direction = 1
-        self.wind_change_time = time.time() + random.uniform(5, 15)
+        self.wind_change_time = random.uniform(5, 15)
+        self.sim_time = 0.0
         self.t = time.time()
         self.startTime = self.t
         return self._get_obs()
 
     def _get_obs(self):
+        # Normalized obs: x/1km, alt/1km, vel/100m/s, angle/pi, fuel frac, wind force/1MN
         return np.array([
-            self.x, self.y - self.y_reset, self.dx, self.dy, self.theta,
-            self.dtheta, self.propMass / 1000, self.wind_magnitude, self.wind_direction
-        ])
+            self.x / 1000.0, (self.y - self.y_reset) / 1000.0,
+            self.dx / 100.0, self.dy / 100.0,
+            self.theta / math.pi, self.dtheta / math.pi,
+            self.propMass / self.propMass_initial,
+            self.wind_magnitude / 1e6, float(self.wind_direction),
+        ], dtype=np.float32)
 
-    def step(self, action):
+    def step(self, action, dt=None):
         thrust_angle, thrust_multiplier = action
-        self.manualThrustAngle = np.clip(thrust_angle, -30, 30)
-        self.thrustMagnitudeMultiplier = np.clip(thrust_multiplier, 0, 1)
+        self.manualThrustAngle = float(np.clip(thrust_angle, -30, 30))
+        self.thrustMagnitudeMultiplier = float(np.clip(thrust_multiplier, 0, 1))
 
-        newT = time.time()
-        dt = newT - self.t
-        self.t = newT
+        dt = self.dt if dt is None else dt
+        self.sim_time += dt
 
-        # Update wind
-        if self.t > self.wind_change_time:
+        # Update wind (sim-time based, force in Newtons)
+        if self.sim_time > self.wind_change_time:
             self.wind_magnitude = random.uniform(800000, 1000000)
             self.wind_direction = random.choice([-1, 1])
-            self.wind_change_time = self.t + random.uniform(5, 15)
+            self.wind_change_time = self.sim_time + random.uniform(5, 15)
 
         # Update propellant mass
         if self.propMass > 0 and self.thrustMagnitudeMultiplier > 0.001:
@@ -163,9 +181,10 @@ class RocketEnv:
         self.x += self.dx * dt
         self.y += self.dy * dt
 
-        # Ground collision
+        # Ground collision (stick on pad)
         if self.y < self.y_reset:
             self.y = self.y_reset
+            self.dx = 0
             self.dy = 0
             self.dtheta = 0
 
@@ -181,6 +200,10 @@ class RocketEnv:
         if distance_to_target < 50:  # Reached target
             reward += 1000
             done = True
+        elif distance_to_target < 100:  # Close: partial credit, keep flying
+            reward += 500
+        elif distance_to_target < 250:  # Near: small shaping bonus, no terminate
+            reward += 200
         elif self.has_launched and self.y <= self.y_reset:  # Landed after launch
             reward -= 100
             done = True
@@ -207,20 +230,33 @@ class RocketEnv:
         launch_pad_y = ground_y - launch_pad_height + 15
         pygame.draw.rect(self.screen, 'red', (launch_pad_x, launch_pad_y, launch_pad_width, launch_pad_height))
 
-        # Convert to screen coords
-        screen_x = int(self.x * 1 - 0 * 1 + self.size[0] / 2)
-        screen_y = int(-self.y * 1 - 0 * 1 + self.size[1] / 2)
+        # Convert to screen coords (pad-anchored camera, clamped on-screen)
+        alt = self.y - self.y_reset
+        screen_x = int(self.size[0] / 2 + self.x)
+        screen_y = int(ground_y - alt - 40)
+        off_top = screen_y < 20
+        screen_y = max(20, min(ground_y, screen_y))
+
+        # Target marker at (target_x, target_alt)
+        tx = int(self.size[0] / 2 + self.target_x)
+        target_screen_y = int(ground_y - self.target_alt - 40)
+        if 0 <= tx <= self.size[0] and 0 < target_screen_y < ground_y:
+            pygame.draw.circle(self.screen, (0, 180, 0), (tx, target_screen_y), 12, 2)
+            pygame.draw.line(self.screen, (0, 180, 0), (tx - 18, target_screen_y), (tx + 18, target_screen_y), 2)
+            pygame.draw.line(self.screen, (0, 180, 0), (tx, target_screen_y - 18), (tx, target_screen_y + 18), 2)
 
         # Status text
         speed = np.linalg.norm([self.dx, self.dy])
+        dist = float(np.sqrt((self.x - self.target_x)**2 + (self.y - self.target_y)**2))
         status_lines = [
+            f"Target: ({self.target_x:.0f}, {self.target_alt:.0f}) m | Dist: {dist:.0f} m",
             f"Position: ({self.x:.0f}, {self.y-self.y_reset:.0f}) m",
             f"Velocity: ({self.dx:.0f}, {self.dy:.0f}) m/s | Speed: {speed:.0f} m/s",
             f"Angle: {self.theta*180/math.pi:.0f}°",
             f"Fuel: {self.propMass/1000:.0f} / {self.propMass_initial/1000:.0f} tonnes",
-            f"Thrust: {self.thrustMagnitudeMultiplier * self.currentRaptorThrust /1e6:.0f} MN (Multiplier: {self.thrustMagnitudeMultiplier:.2f})",
+            f"Thrust: {self.thrustMagnitudeMultiplier * self.currentRaptorThrust /1e6:.1f} MN (x{self.thrustMagnitudeMultiplier:.2f})",
             f"Gimbal Angle: {self.manualThrustAngle:.1f}°",
-            f"Wind: {self.wind_magnitude:.1f} m/s {'Right' if self.wind_direction > 0 else 'Left'}"
+            f"Wind force: {self.wind_magnitude/1e6:.2f} MN {'Right' if self.wind_direction > 0 else 'Left'}" + (" (off-screen ↑)" if off_top else "")
         ]
         for i, line in enumerate(status_lines):
             text = self.font.render(line, True, self.font_color_black)
@@ -229,7 +265,7 @@ class RocketEnv:
         # Display controls
         control_lines = [
             "Controls:",
-            "Left/Right: Gimbal +/-1°",
+            "Left: tilt left / Right: tilt right",
             "Up/Down: Throttle +/-1%",
             "R: Reset"
         ]
@@ -300,9 +336,9 @@ def train():
             obs_tensor = torch.tensor(obs, dtype=torch.float32)
             action, log_prob = policy.sample(obs_tensor)
 
-            # Scale actions
-            thrust_angle = action[0].item() * 30  # -30 to 30
-            thrust_multiplier = torch.sigmoid(action[1]).item()  # 0 to 1
+            # Scale actions (tanh keeps angle in [-30,30] matching env clip)
+            thrust_angle = float(np.tanh(action[0].item()) * 30)
+            thrust_multiplier = float(torch.sigmoid(action[1]).item())
 
             action_clipped = [thrust_angle, thrust_multiplier]
 
@@ -313,6 +349,9 @@ def train():
 
             obs = next_obs
             step += 1
+
+        if not rewards:
+            continue
 
         # Compute returns
         returns = []
@@ -364,7 +403,7 @@ def train():
     plt.show()
 
     # Save model
-    torch.save(policy.state_dict(), 'rocket_policy.pth')
+    torch.save(policy.state_dict(), str(BASE_DIR / 'rocket_policy.pth'))
 
 # For standalone run
 if __name__ == "__main__":
@@ -382,7 +421,7 @@ if __name__ == "__main__":
         action_dim = 2
         policy = PolicyNetwork(input_dim, hidden_dim, action_dim)
         try:
-            policy.load_state_dict(torch.load('rocket_policy.pth'))
+            policy.load_state_dict(torch.load(str(BASE_DIR / 'rocket_policy.pth'), map_location='cpu'))
             policy.eval()
             print("Model loaded successfully.")
         except FileNotFoundError:
@@ -391,7 +430,8 @@ if __name__ == "__main__":
 
     manual_angle = 0
     manual_thrust = 0
-    obs = env.reset()
+    obs = env.reset(random_target=True)
+    print(f"Fly to target ({env.target_x:.0f}, {env.target_alt:.0f})")
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -402,9 +442,9 @@ if __name__ == "__main__":
             angle_change = 0
             thrust_change = 0
             if keys[pygame.K_LEFT]:
-                angle_change += 0.1
-            if keys[pygame.K_RIGHT]:
                 angle_change -= 0.1
+            if keys[pygame.K_RIGHT]:
+                angle_change += 0.1
             if keys[pygame.K_UP]:
                 thrust_change += 0.01
             if keys[pygame.K_DOWN]:
@@ -416,21 +456,22 @@ if __name__ == "__main__":
             action_clipped = [manual_angle, manual_thrust]
         else:
             obs_tensor = torch.tensor(obs, dtype=torch.float32)
-            action, _ = policy.sample(obs_tensor)
-            thrust_angle = action[0].item() * 30
-            thrust_multiplier = torch.sigmoid(action[1]).item()
+            with torch.no_grad():
+                action, _ = policy.sample(obs_tensor)
+            thrust_angle = float(np.tanh(action[0].item()) * 30)
+            thrust_multiplier = float(torch.sigmoid(action[1]).item())
             action_clipped = [thrust_angle, thrust_multiplier]
 
         if keys[pygame.K_r]:
-            env.reset()
-            obs = env.reset()
+            obs = env.reset(random_target=True)
             manual_angle = 0
             manual_thrust = 0
+            print(f"New target ({env.target_x:.0f}, {env.target_alt:.0f})")
 
         obs, reward, done, info = env.step(action_clipped)
         env.render()
         if done:
-            env.reset()
-            obs = env.reset()
+            print(f"Reached/crashed. New target...", end=" ")
+            obs = env.reset(random_target=True)
             manual_angle = 0
             manual_thrust = 0

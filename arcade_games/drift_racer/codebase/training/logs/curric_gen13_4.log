@@ -1,0 +1,211 @@
+/home/manigupt/miniconda3/lib/python3.11/site-packages/conda/base/context.py:201: FutureWarning: Adding 'defaults' to channel list implicitly is deprecated and will be removed in 25.3. 
+
+To remove this warning, please choose a default channel explicitly with conda's regular configuration system, e.g. by adding 'defaults' to the list of channels:
+
+  conda config --add channels defaults
+
+For more information see https://docs.conda.io/projects/conda/en/stable/user-guide/configuration/use-condarc.html
+
+  deprecated.topic(
+
+# >>>>>>>>>>>>>>>>>>>>>> ERROR REPORT <<<<<<<<<<<<<<<<<<<<<<
+
+    Traceback (most recent call last):
+      File "/home/manigupt/miniconda3/lib/python3.11/site-packages/conda/exception_handler.py", line 18, in __call__
+        return func(*args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^
+      File "/home/manigupt/miniconda3/lib/python3.11/site-packages/conda/cli/main.py", line 87, in main_sourced
+        print(activator.execute(), end="")
+              ^^^^^^^^^^^^^^^^^^^
+      File "/home/manigupt/miniconda3/lib/python3.11/site-packages/conda/activate.py", line 238, in execute
+        response = getattr(self, self.command)()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "/home/manigupt/miniconda3/lib/python3.11/site-packages/conda/activate.py", line 200, in activate
+        builder_result = self.build_activate(self.env_name_or_prefix)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "/home/manigupt/miniconda3/lib/python3.11/site-packages/conda/activate.py", line 367, in build_activate
+        return self._build_activate_stack(env_name_or_prefix, False)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "/home/manigupt/miniconda3/lib/python3.11/site-packages/conda/activate.py", line 457, in _build_activate_stack
+        deactivate_scripts = self._get_deactivate_scripts(old_conda_prefix)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "/home/manigupt/miniconda3/lib/python3.11/site-packages/conda/activate.py", line 810, in _get_deactivate_scripts
+        for entry in os.scandir(join(prefix, "etc", "conda", "deactivate.d"))
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "<frozen posixpath>", line 76, in join
+    TypeError: expected str, bytes or os.PathLike object, not NoneType
+
+`$ /home/manigupt/miniconda3/bin/conda shell.posix activate base`
+
+  environment variables:
+                 CIO_TEST=<not set>
+        CONDA_DEFAULT_ENV=base
+                CONDA_EXE=/home/manigupt/miniconda3/bin/conda
+    CONDA_PROMPT_MODIFIER=(base)
+         CONDA_PYTHON_EXE=/home/manigupt/miniconda3/bin/python
+               CONDA_ROOT=/home/manigupt/miniconda3
+              CONDA_SHLVL=1
+           CURL_CA_BUNDLE=<not set>
+               LD_PRELOAD=<not set>
+                     PATH=/home/manigupt/.local/bin:/home/manigupt/.grok/bin:/home/manigupt/.ope
+                          ncode/bin:/home/manigupt/.grok/bin:/home/manigupt/.opencode/bin:/home/
+                          manigupt/.nvm/versions/node/v22.14.0/bin:/home/manigupt/miniconda3/bin
+                          :/home/manigupt/miniconda3/condabin:/home/manigupt/.local/bin:/usr/loc
+                          al/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/l
+                          ocal/games:/snap/bin:/snap/bin
+         PYTHONUNBUFFERED=1
+       REQUESTS_CA_BUNDLE=<not set>
+            SSL_CERT_FILE=/home/manigupt/.hermes/hermes-agent/venv/lib/python3.11/site-
+                          packages/certifi/cacert.pem
+               WINDOWPATH=2
+
+     active environment : None
+            shell level : 1
+       user config file : /home/manigupt/.condarc
+ populated config files : 
+          conda version : 24.11.3
+    conda-build version : not installed
+         python version : 3.11.5.final.0
+                 solver : libmamba (default)
+       virtual packages : __archspec=1=icelake
+                          __conda=24.11.3=0
+                          __glibc=2.37=0
+                          __linux=6.2.0=0
+                          __unix=0=0
+       base environment : /home/manigupt/miniconda3  (writable)
+      conda av data dir : /home/manigupt/miniconda3/etc/conda
+  conda av metadata url : None
+           channel URLs : https://repo.anaconda.com/pkgs/main/linux-64
+                          https://repo.anaconda.com/pkgs/main/noarch
+                          https://repo.anaconda.com/pkgs/r/linux-64
+                          https://repo.anaconda.com/pkgs/r/noarch
+          package cache : /home/manigupt/miniconda3/pkgs
+                          /home/manigupt/.conda/pkgs
+       envs directories : /home/manigupt/miniconda3/envs
+                          /home/manigupt/.conda/envs
+               platform : linux-64
+             user-agent : conda/24.11.3 requests/2.31.0 CPython/3.11.5 Linux/6.2.0-39-generic ubuntu/23.04 glibc/2.37 solver/libmamba conda-libmamba-solver/23.12.0 libmambapy/1.5.3
+                UID:GID : 1000:1000
+             netrc file : None
+           offline mode : False
+
+
+An unexpected error has occurred. Conda has prepared the above report.
+If you suspect this error is being caused by a malfunctioning plugin,
+consider using the --no-plugins option to turn off plugins.
+
+Example: conda --no-plugins install <package>
+
+Alternatively, you can set the CONDA_NO_PLUGINS environment variable on
+the command line to run the command without plugins enabled.
+
+Example: CONDA_NO_PLUGINS=true conda install <package>
+
+/home/manigupt/miniconda3/lib/python3.11/site-packages/conda/base/context.py:201: FutureWarning: Adding 'defaults' to channel list implicitly is deprecated and will be removed in 25.3. 
+
+To remove this warning, please choose a default channel explicitly with conda's regular configuration system, e.g. by adding 'defaults' to the list of channels:
+
+  conda config --add channels defaults
+
+For more information see https://docs.conda.io/projects/conda/en/stable/user-guide/configuration/use-condarc.html
+
+  deprecated.topic(
+
+# >>>>>>>>>>>>>>>>>>>>>> ERROR REPORT <<<<<<<<<<<<<<<<<<<<<<
+
+    Traceback (most recent call last):
+      File "/home/manigupt/miniconda3/lib/python3.11/site-packages/conda/exception_handler.py", line 18, in __call__
+        return func(*args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^
+      File "/home/manigupt/miniconda3/lib/python3.11/site-packages/conda/cli/main.py", line 87, in main_sourced
+        print(activator.execute(), end="")
+              ^^^^^^^^^^^^^^^^^^^
+      File "/home/manigupt/miniconda3/lib/python3.11/site-packages/conda/activate.py", line 238, in execute
+        response = getattr(self, self.command)()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "/home/manigupt/miniconda3/lib/python3.11/site-packages/conda/activate.py", line 200, in activate
+        builder_result = self.build_activate(self.env_name_or_prefix)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "/home/manigupt/miniconda3/lib/python3.11/site-packages/conda/activate.py", line 367, in build_activate
+        return self._build_activate_stack(env_name_or_prefix, False)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "/home/manigupt/miniconda3/lib/python3.11/site-packages/conda/activate.py", line 457, in _build_activate_stack
+        deactivate_scripts = self._get_deactivate_scripts(old_conda_prefix)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "/home/manigupt/miniconda3/lib/python3.11/site-packages/conda/activate.py", line 810, in _get_deactivate_scripts
+        for entry in os.scandir(join(prefix, "etc", "conda", "deactivate.d"))
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "<frozen posixpath>", line 76, in join
+    TypeError: expected str, bytes or os.PathLike object, not NoneType
+
+`$ /home/manigupt/miniconda3/bin/conda shell.posix activate /home/manigupt/miniconda3/envs/myenv`
+
+  environment variables:
+                 CIO_TEST=<not set>
+        CONDA_DEFAULT_ENV=base
+                CONDA_EXE=/home/manigupt/miniconda3/bin/conda
+    CONDA_PROMPT_MODIFIER=(base)
+         CONDA_PYTHON_EXE=/home/manigupt/miniconda3/bin/python
+               CONDA_ROOT=/home/manigupt/miniconda3
+              CONDA_SHLVL=1
+           CURL_CA_BUNDLE=<not set>
+               LD_PRELOAD=<not set>
+                     PATH=/home/manigupt/.local/bin:/home/manigupt/.grok/bin:/home/manigupt/.ope
+                          ncode/bin:/home/manigupt/.grok/bin:/home/manigupt/.opencode/bin:/home/
+                          manigupt/.nvm/versions/node/v22.14.0/bin:/home/manigupt/miniconda3/bin
+                          :/home/manigupt/miniconda3/condabin:/home/manigupt/.local/bin:/usr/loc
+                          al/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/l
+                          ocal/games:/snap/bin:/snap/bin
+         PYTHONUNBUFFERED=1
+       REQUESTS_CA_BUNDLE=<not set>
+            SSL_CERT_FILE=/home/manigupt/.hermes/hermes-agent/venv/lib/python3.11/site-
+                          packages/certifi/cacert.pem
+               WINDOWPATH=2
+
+     active environment : None
+            shell level : 1
+       user config file : /home/manigupt/.condarc
+ populated config files : 
+          conda version : 24.11.3
+    conda-build version : not installed
+         python version : 3.11.5.final.0
+                 solver : libmamba (default)
+       virtual packages : __archspec=1=icelake
+                          __conda=24.11.3=0
+                          __glibc=2.37=0
+                          __linux=6.2.0=0
+                          __unix=0=0
+       base environment : /home/manigupt/miniconda3  (writable)
+      conda av data dir : /home/manigupt/miniconda3/etc/conda
+  conda av metadata url : None
+           channel URLs : https://repo.anaconda.com/pkgs/main/linux-64
+                          https://repo.anaconda.com/pkgs/main/noarch
+                          https://repo.anaconda.com/pkgs/r/linux-64
+                          https://repo.anaconda.com/pkgs/r/noarch
+          package cache : /home/manigupt/miniconda3/pkgs
+                          /home/manigupt/.conda/pkgs
+       envs directories : /home/manigupt/miniconda3/envs
+                          /home/manigupt/.conda/envs
+               platform : linux-64
+             user-agent : conda/24.11.3 requests/2.31.0 CPython/3.11.5 Linux/6.2.0-39-generic ubuntu/23.04 glibc/2.37 solver/libmamba conda-libmamba-solver/23.12.0 libmambapy/1.5.3
+                UID:GID : 1000:1000
+             netrc file : None
+           offline mode : False
+
+
+An unexpected error has occurred. Conda has prepared the above report.
+If you suspect this error is being caused by a malfunctioning plugin,
+consider using the --no-plugins option to turn off plugins.
+
+Example: conda --no-plugins install <package>
+
+Alternatively, you can set the CONDA_NO_PLUGINS environment variable on
+the command line to run the command without plugins enabled.
+
+Example: CONDA_NO_PLUGINS=true conda install <package>
+
+Traceback (most recent call last):
+  File "/home/manigupt/Hello/control-works/arcade_games/drift_racer/codebase/training/train_nn.py", line 180, in <module>
+    import pygame
+ModuleNotFoundError: No module named 'pygame'
+ERROR conda.cli.main_run:execute(125): `conda run python -u training/train_nn.py --generations 4 --curriculum --proc-tracks 2 --proc-seed 11 --resume` failed. (See above for error)

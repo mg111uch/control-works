@@ -22,7 +22,7 @@ GLOW_COLORS = [(255, 100, 100), (255, 200, 100), (255, 255, 100)]
 # Car physics constants
 CAR_WIDTH = 25
 CAR_HEIGHT = 15
-ACCELERATION = 0.05
+ACCELERATION = 0.07
 FRICTION = 0.98
 DRIFT_FRICTION = 0.94
 TURN_SPEED = 1.5
@@ -49,4 +49,4 @@ START_LINE_OFFSET = -150
 
 # Default track path
 DEFAULT_TRACKS_DIR = "tracks"
-DEFAULT_TRACK_FILE = "figure8.json"
+DEFAULT_TRACK_FILE = "simple_oval.json"

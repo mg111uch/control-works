@@ -97,18 +97,26 @@ class TestCar(unittest.TestCase):
         self.assertLess(car1.speed, speed_before_drift)
     
     def test_car_state_normalization(self):
-        """Test state array is properly normalized."""
+        """Test state array is properly normalized (egocentric: no absolute x,y)."""
         car = Car(300, 200, 0)
         state = car.get_state()
-        
+
         # Should return float32 array
         self.assertEqual(state.dtype, np.float32)
-        # Should have 15 elements (5 car + 10 rays)
+        # Should have 15 elements (5 ego car features + 10 rays)
         self.assertEqual(len(state), 15)
-        # x should be normalized to ~0.5
-        self.assertAlmostEqual(state[0], 0.5, places=2)
-        # y should be normalized to ~0.5
-        self.assertAlmostEqual(state[1], 0.5, places=2)
+        # speed 0 -> 0, drift 0 -> 0
+        self.assertAlmostEqual(state[0], 0.0, places=2)
+        self.assertAlmostEqual(state[1], 0.0, places=2)
+        # no target -> bearing ahead (sin 0, cos 1), dist 0
+        self.assertAlmostEqual(state[2], 0.0, places=2)
+        self.assertAlmostEqual(state[3], 1.0, places=2)
+        self.assertAlmostEqual(state[4], 0.0, places=2)
+        # target straight ahead: rel bearing 0, dist 100/720
+        state = car.get_state(next_cp=(300, 100))
+        self.assertAlmostEqual(state[2], 0.0, places=2)
+        self.assertAlmostEqual(state[3], 1.0, places=2)
+        self.assertAlmostEqual(state[4], 100.0 / 720.0, places=2)
 
 
 class TestDynamicSteering(unittest.TestCase):

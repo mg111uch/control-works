@@ -14,7 +14,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from models.car import Car
 from models.game_state import (
     GameState, OFF_TRACK_PENALTY, LAP_BONUS, 
-    FORWARD_PROGRESS_SCALE, LIVING_REWARD, DRIFT_REWARD_SCALE, MIN_DRIFT_ANGLE, OFF_TRACK_NO_END
+    FORWARD_PROGRESS_SCALE, LIVING_REWARD, DRIFT_REWARD_SCALE, MIN_DRIFT_ANGLE, OFF_TRACK_NO_END,
+    SPEED_REWARD_SCALE
 )
 
 
@@ -165,8 +166,8 @@ class TestNewRewardFunction:
         
         # Reward should include forward_progress * FORWARD_PROGRESS_SCALE
         expected_progress_reward = forward_progress * FORWARD_PROGRESS_SCALE
-        # Also includes living reward
-        expected_reward = expected_progress_reward + LIVING_REWARD
+        # Also includes living + speed rewards
+        expected_reward = expected_progress_reward + LIVING_REWARD + 5.0 * SPEED_REWARD_SCALE
         
         assert reward == pytest.approx(expected_reward, abs=0.1)
     
@@ -181,8 +182,8 @@ class TestNewRewardFunction:
             drift_angle=0.0, forward_progress=0.0
         )
         
-        # Should only have living reward
-        assert reward == pytest.approx(LIVING_REWARD, abs=0.1)
+        # Should have living + speed rewards (no drift, no progress)
+        assert reward == pytest.approx(LIVING_REWARD + 5.0 * SPEED_REWARD_SCALE, abs=0.1)
     
     def test_drift_reward_with_angle(self):
         """Test that drift reward is calculated based on drift angle."""
@@ -199,7 +200,7 @@ class TestNewRewardFunction:
         
         # Expected drift component: sin(45) * speed^2 * DRIFT_REWARD_SCALE * combo(1)
         expected_drift = math.sin(math.radians(drift_angle)) * (speed ** 2) * DRIFT_REWARD_SCALE
-        expected_reward = LIVING_REWARD + expected_drift
+        expected_reward = LIVING_REWARD + expected_drift + speed * SPEED_REWARD_SCALE
         
         assert reward == pytest.approx(expected_reward, abs=0.1)
     
@@ -216,8 +217,8 @@ class TestNewRewardFunction:
             drift_angle=drift_angle, forward_progress=0.0
         )
         
-        # Should only have living reward (no drift reward)
-        assert reward == pytest.approx(LIVING_REWARD, abs=0.1)
+        # Should have living + speed rewards (no drift reward)
+        assert reward == pytest.approx(LIVING_REWARD + 5.0 * SPEED_REWARD_SCALE, abs=0.1)
     
     def test_drift_reward_requires_speed(self):
         """Test that drift reward only applies above minimum speed."""
@@ -232,8 +233,8 @@ class TestNewRewardFunction:
             drift_angle=drift_angle, forward_progress=0.0
         )
         
-        # Should only have living reward (no drift reward due to low speed)
-        assert reward == pytest.approx(LIVING_REWARD, abs=0.1)
+        # Should have living + speed rewards (no drift reward due to low speed)
+        assert reward == pytest.approx(LIVING_REWARD + 0.3 * SPEED_REWARD_SCALE, abs=0.1)
 
 
 class TestComboMultiplier:
@@ -339,8 +340,8 @@ class TestObservationSpace:
         
         state = car.get_state()
         
-        # Drift angle is 5th feature (index 4), normalized: 90/180 = 0.5
-        assert state[4] == pytest.approx(0.5, abs=0.01)
+        # Drift angle is 2nd feature (index 1), normalized: 90/180 = 0.5
+        assert state[1] == pytest.approx(0.5, abs=0.01)
 
 
 if __name__ == "__main__":
